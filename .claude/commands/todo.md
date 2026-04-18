@@ -22,7 +22,7 @@ Ask these **one at a time**, waiting for the answer before asking the next:
 
 ## Preview and confirm
 
-Use the `AskUserQuestion` tool to show the user a formatted preview of the todo entry and ask: **"Does this look right, or would you like to change anything?"** Adjust if needed.
+Show the user a formatted preview of the todo entry and ask: **"Does this look right, or would you like to change anything?"** Adjust if needed.
 
 ## Write to file
 

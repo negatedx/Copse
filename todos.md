@@ -52,19 +52,6 @@
 
 ---
 
-## Colour themes need work
-
-**Problem:** The Light theme has text that is very hard to read in places. Diff colours (added/removed lines) look too bold/saturated in both themes.
-
-**Acceptance criteria:**
-- All text in Light theme is legible against its background
-- Diff line colours (green/red) are readable but not overwhelming in both themes
-- Status badge colours (M, A, D, etc.) work in both themes
-
-**Notes:** egui's `Visuals::light()` defaults may need overrides for specific colours. Check diff.rs and pending.rs colour constants.
-
----
-
 ## Fix commit graph rendering: disconnected nodes and missing spacing
 
 **Problem:** In the HISTORY panel, commit graph nodes are not connected by lines between them. Additionally, the commit hash and date are rendered with no space between them, making the text run together and hard to read.
@@ -114,5 +101,19 @@
 - Selecting a different repo moves the highlight immediately
 
 **Notes:** Sidebar rendering is in `src/ui/sidebar.rs`. Check how the selected state is currently rendered for repo rows vs worktree rows — worktree rows may already have a highlight to use as reference.
+
+---
+
+## Show branch names on commit graph
+
+**Problem:** The HISTORY panel shows commits but gives no indication of which commit each branch (local or remote) points to. It's impossible to see branch positions at a glance.
+
+**Acceptance criteria:**
+- Each commit row that is the tip of one or more branches shows the branch name(s) as a pill/label beside the commit message
+- Local and remote-tracking branches (e.g. `main`, `origin/main`) are both shown
+- HEAD branch is visually distinct (e.g. bold or different colour)
+- Labels don't overflow or obscure the commit message — truncate or wrap if needed
+
+**Notes:** `CommitInfo.branches` in `git/mod.rs` exists but is always `vec![]`. Populate it in `get_commits` by building a map of OID → branch names from `repo.branches(None)` before the revwalk, then assign matches per commit. Rendering belongs in `src/ui/graph.rs`.
 
 ---

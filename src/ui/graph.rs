@@ -11,6 +11,11 @@ pub enum GraphAction {
 
 pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
     let mut action: Option<GraphAction> = None;
+    let dark = ui.visuals().dark_mode;
+    let text_color = ui.visuals().text_color();
+    let sel_color = ui.visuals().strong_text_color();
+    let branch_bg = if dark { Color32::from_rgb(20, 40, 70) } else { Color32::from_rgb(210, 225, 255) };
+    let branch_fg = if dark { Color32::from_rgb(100, 160, 240) } else { Color32::from_rgb(20, 80, 180) };
 
     ui.add_space(4.0);
     ui.label(RichText::new("HISTORY").size(10.0).color(Color32::GRAY));
@@ -58,7 +63,7 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                     ui.add_space(8.0);
                     ui.vertical(|ui| {
                         ui.add_space(4.0);
-                        let color = if pending_selected { Color32::WHITE } else { Color32::LIGHT_GRAY };
+                        let color = if pending_selected { sel_color } else { text_color };
                         ui.label(RichText::new("Working Tree").size(13.0).color(color));
                         ui.push_id("wt_meta", |ui| { ui.horizontal(|ui| {
                             let change_text = if pending_count == 0 {
@@ -108,7 +113,7 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                         ui.add_space(8.0);
                         ui.vertical(|ui| {
                             ui.add_space(4.0);
-                            let msg_color = if is_sel { Color32::WHITE } else { Color32::LIGHT_GRAY };
+                            let msg_color = if is_sel { sel_color } else { text_color };
                             let msg = if commit.message.chars().count() > 52 {
                                 let end = commit.message.char_indices().nth(51).map(|(i, _)| i).unwrap_or(commit.message.len());
                                 format!("{}…", &commit.message[..end])
@@ -118,13 +123,13 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                             ui.label(RichText::new(&msg).size(13.0).color(msg_color));
                             ui.push_id("meta", |ui| { ui.horizontal(|ui| {
                                 ui.label(RichText::new(&commit.short_id).size(12.0).monospace()
-                                    .color(Color32::from_rgb(55, 138, 221)));
+                                    .color(branch_fg));
                                 ui.label(RichText::new(relative_time(&commit.time)).size(11.0).color(Color32::GRAY));
                             }); });
                             for branch in &commit.branches {
                                 ui.label(RichText::new(branch).size(11.0)
-                                    .color(Color32::from_rgb(55, 138, 221))
-                                    .background_color(Color32::from_rgb(20, 40, 70)));
+                                    .color(branch_fg)
+                                    .background_color(branch_bg));
                             }
                             ui.add_space(6.0);
                         });

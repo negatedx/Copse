@@ -1,16 +1,17 @@
 use crate::{git::DiffLineKind, state::AppState};
 use egui::{Color32, RichText, ScrollArea, Ui};
 
-const ADD_BG: Color32 = Color32::from_rgb(30, 55, 30);
-const DEL_BG: Color32 = Color32::from_rgb(60, 25, 25);
-const ADD_FG: Color32 = Color32::from_rgb(150, 210, 120);
-const DEL_FG: Color32 = Color32::from_rgb(210, 120, 120);
-const CTX_FG: Color32 = Color32::LIGHT_GRAY;
-const HUNK_FG: Color32 = Color32::GRAY;
-const LN_FG: Color32 = Color32::from_rgb(80, 80, 80);
-
 /// Renders the diff view for the currently selected file.
 pub fn show(ui: &mut Ui, state: &AppState) {
+    let dark = ui.visuals().dark_mode;
+    let add_bg = if dark { Color32::from_rgb(30, 55, 30) } else { Color32::from_rgb(215, 242, 215) };
+    let del_bg = if dark { Color32::from_rgb(60, 25, 25) } else { Color32::from_rgb(250, 220, 220) };
+    let add_fg = if dark { Color32::from_rgb(130, 190, 100) } else { Color32::from_rgb(25, 105, 25) };
+    let del_fg = if dark { Color32::from_rgb(200, 100, 100) } else { Color32::from_rgb(155, 30, 30) };
+    let ctx_fg = ui.visuals().text_color();
+    let hunk_fg = Color32::GRAY;
+    let ln_fg = if dark { Color32::from_rgb(80, 80, 80) } else { Color32::from_rgb(160, 160, 160) };
+
     // Header: breadcrumb
     if let Some(file) = state.selected_file() {
         let wt_name = state
@@ -67,14 +68,14 @@ pub fn show(ui: &mut Ui, state: &AppState) {
                         RichText::new(&hunk.header)
                             .size(10.0)
                             .monospace()
-                            .color(HUNK_FG),
+                            .color(hunk_fg),
                     );
 
                     for (line_i, line) in hunk.lines.iter().enumerate() {
                         let (bg, fg, prefix) = match line.kind {
-                            DiffLineKind::Added => (ADD_BG, ADD_FG, "+"),
-                            DiffLineKind::Deleted => (DEL_BG, DEL_FG, "-"),
-                            DiffLineKind::Context => (Color32::TRANSPARENT, CTX_FG, " "),
+                            DiffLineKind::Added => (add_bg, add_fg, "+"),
+                            DiffLineKind::Deleted => (del_bg, del_fg, "-"),
+                            DiffLineKind::Context => (Color32::TRANSPARENT, ctx_fg, " "),
                         };
 
                         ui.push_id(line_i, |ui| {
@@ -86,7 +87,7 @@ pub fn show(ui: &mut Ui, state: &AppState) {
                                         .map(|n| format!("{n:>4}"))
                                         .unwrap_or_else(|| "    ".to_string());
                                     ui.label(
-                                        RichText::new(&ln).size(10.0).monospace().color(LN_FG),
+                                        RichText::new(&ln).size(10.0).monospace().color(ln_fg),
                                     );
                                     ui.add_space(4.0);
                                     let text = format!("{prefix}{}", line.content);

@@ -8,6 +8,8 @@ pub enum SidebarAction {
 
 pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
     let mut action: Option<SidebarAction> = None;
+    let text_color = ui.visuals().text_color();
+    let sel_color = ui.visuals().strong_text_color();
 
     // ── Header ─────────────────────────────────────────────────────────────────
     ui.horizontal(|ui| {
@@ -82,7 +84,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                         }
                         ui.label(
                             RichText::new(&repo_name).size(14.0).strong()
-                                .color(if repo_selected { Color32::WHITE } else { Color32::LIGHT_GRAY }),
+                                .color(if repo_selected { sel_color } else { text_color }),
                         );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.add_space(4.0);
@@ -140,9 +142,9 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                                 ui.label(RichText::new("–").size(12.0).color(Color32::DARK_GRAY));
                                 ui.label(
                                     RichText::new(&wt_name).size(13.0).color(
-                                        if is_active { Color32::WHITE }
+                                        if is_active { sel_color }
                                         else if is_highlighted { Color32::from_rgb(55, 138, 221) }
-                                        else { Color32::GRAY }
+                                        else { text_color }
                                     ),
                                 );
                                 if changes > 0 {

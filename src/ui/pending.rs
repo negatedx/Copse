@@ -7,6 +7,9 @@ use egui::{Color32, Id, Layout, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos
 /// Renders the pending changes section. Returns the selected file index if clicked.
 pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
     let mut clicked_idx: Option<usize> = None;
+    let dark = ui.visuals().dark_mode;
+    let text_color = ui.visuals().text_color();
+    let sel_color = ui.visuals().strong_text_color();
 
     let changes = state.ui.files_view.clone();
     let count = changes.len();
@@ -45,7 +48,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
 
                 for (i, change) in changes.iter().enumerate() {
                     let is_sel = state.selection.file_idx == Some(i);
-                    let label_color = status_color(&change.status);
+                    let label_color = status_color(&change.status, dark);
                     let name = change
                         .path
                         .file_name()
@@ -62,7 +65,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
                             ui.label(RichText::new(change.status.label()).size(12.0).strong().color(label_color));
                             ui.add_space(6.0);
                             ui.label(RichText::new(&name).size(13.0)
-                                .color(if is_sel { Color32::WHITE } else { Color32::LIGHT_GRAY }));
+                                .color(if is_sel { sel_color } else { text_color }));
                         });
                     });
 
@@ -82,13 +85,24 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
     clicked_idx
 }
 
-fn status_color(status: &ChangeStatus) -> Color32 {
-    match status {
-        ChangeStatus::Modified => Color32::from_rgb(55, 138, 221),
-        ChangeStatus::Added => Color32::from_rgb(99, 153, 34),
-        ChangeStatus::Deleted => Color32::from_rgb(163, 45, 45),
-        ChangeStatus::Untracked => Color32::from_rgb(133, 79, 11),
-        ChangeStatus::Renamed => Color32::from_rgb(83, 74, 183),
-        ChangeStatus::Conflicted => Color32::from_rgb(211, 75, 78),
+fn status_color(status: &ChangeStatus, dark: bool) -> Color32 {
+    if dark {
+        match status {
+            ChangeStatus::Modified => Color32::from_rgb(55, 138, 221),
+            ChangeStatus::Added => Color32::from_rgb(99, 153, 34),
+            ChangeStatus::Deleted => Color32::from_rgb(200, 65, 65),
+            ChangeStatus::Untracked => Color32::from_rgb(180, 120, 40),
+            ChangeStatus::Renamed => Color32::from_rgb(120, 110, 220),
+            ChangeStatus::Conflicted => Color32::from_rgb(211, 75, 78),
+        }
+    } else {
+        match status {
+            ChangeStatus::Modified => Color32::from_rgb(20, 100, 190),
+            ChangeStatus::Added => Color32::from_rgb(40, 120, 10),
+            ChangeStatus::Deleted => Color32::from_rgb(170, 30, 30),
+            ChangeStatus::Untracked => Color32::from_rgb(140, 80, 0),
+            ChangeStatus::Renamed => Color32::from_rgb(70, 60, 180),
+            ChangeStatus::Conflicted => Color32::from_rgb(180, 40, 40),
+        }
     }
 }
