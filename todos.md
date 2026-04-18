@@ -31,6 +31,35 @@
 
 ---
 
+## UI scale slider is unusable because scale is applied live while dragging
+
+**Priority:** Medium
+
+**Problem:** Dragging the UI scale slider in settings immediately rescales the entire UI each frame, including the slider itself. This causes the slider to jump under the cursor as the layout changes, making it impossible to drag to a target value.
+
+**Acceptance criteria:**
+- The scale slider can be dragged smoothly to any value
+- The new scale is applied only when the drag ends, not on every frame while dragging
+
+**Notes:** Scale is applied in `App::update` every frame via `set_pixels_per_point`. Fix: track an in-progress value in `UiState` while dragging and only call `set_pixels_per_point` + `settings.save()` on `response.drag_stopped()`. The settings panel is in `src/ui/settings.rs`.
+
+---
+
+## Auto-select first file when switching worktree or commit
+
+**Priority:** Medium
+
+**Problem:** When a worktree or commit is selected, the CHANGES panel populates but no file is selected, leaving the diff panel blank. The user must manually click a file every time to see any diff.
+
+**Acceptance criteria:**
+- When a worktree is selected and has pending changes, the first file is auto-selected and its diff shown
+- When a commit is selected, the first file of that commit is auto-selected
+- If the file list is empty, the diff panel remains blank as now
+
+**Notes:** Hook into `refresh_files_view` and `handle_graph_action` in `src/ui/mod.rs` — after populating `ui.files_view`, if non-empty set `selection.file_idx = Some(0)` and call `refresh_diff()`.
+
+---
+
 ## Show hand cursor when hovering over clickable elements
 
 **Priority:** Medium
@@ -90,18 +119,19 @@
 
 ---
 
-## Repo persistence is broken for scanned directories
 
-**Priority:** High
+## Hide expand icon for single-worktree repos
 
-**Problem:** Repos discovered via directory scan are re-discovered from scratch on every launch. This means: (1) repos explicitly removed by the user reappear after restart because the scan dir is still in settings, and (2) the app's repo list is unstable across sessions.
+**Priority:** Low
+
+**Problem:** The sidebar renders a chevron expand/collapse icon for every repo, even when it has only one worktree (the main one). There is nothing to expand, so the icon is visual noise and implies interactivity that doesn't exist.
 
 **Acceptance criteria:**
-- Repos added via directory scan persist individually across restarts
-- A repo explicitly removed by the user does not reappear after restart, even if its parent scan dir is still in settings
-- Manually added repos are unaffected
+- Expand icon is hidden when a repo has exactly one worktree
+- Repos with linked worktrees continue to show the icon as normal
+- Clicking the repo row still selects it
 
-**Notes:** On startup, `scan_dirs` are re-scanned via `discover_repos_in_dir`, overriding any user removals. Simplest fix: after the initial scan, convert discovered paths into explicit `repo_paths` entries and drop the `scan_dir` from settings (one-shot expansion). Alternatively, add a `removed_repo_paths: Vec<PathBuf>` blocklist to `Settings` as a filter. The one-shot expansion is simpler and avoids the blocklist growing unboundedly.
+**Notes:** Sidebar rendering is in `src/ui/sidebar.rs`. Check `repo.worktrees.len() == 1` before rendering the chevron.
 
 ---
 

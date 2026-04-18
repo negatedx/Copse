@@ -6,8 +6,8 @@ mod sidebar;
 
 use crate::{
     git::{
-        discover_repos_in_dir, get_commit_file_diff, get_commit_files, get_commits,
-        get_file_content_as_diff, get_file_diff, load_repos_parallel, ChangeStatus,
+        add_safe_directory, discover_repos_in_dir, get_commit_file_diff, get_commit_files,
+        get_commits, get_file_content_as_diff, get_file_diff, load_repos_parallel, ChangeStatus,
     },
     state::{AppState, Selection, Theme},
     watcher::{all_watch_paths, spawn_watcher},
@@ -71,25 +71,34 @@ impl App {
         drop(tx);
 
         let mut state = AppState::new(rx);
-        let mut paths = state
-            .settings
-            .repo_paths
-            .iter()
-            .cloned()
-            .chain(
-                state
-                    .settings
-                    .scan_dirs
-                    .iter()
-                    .flat_map(|d| discover_repos_in_dir(d)),
-            )
-            .collect::<Vec<_>>();
+
+        // One-shot migration: expand any legacy scan_dirs into explicit repo_paths
+        // so that user removals persist across restarts.
+        if !state.settings.scan_dirs.is_empty() {
+            let discovered: Vec<_> = state
+                .settings
+                .scan_dirs
+                .iter()
+                .flat_map(|d| discover_repos_in_dir(d))
+                .collect();
+            for p in discovered {
+                if !state.settings.repo_paths.contains(&p) {
+                    state.settings.repo_paths.push(p);
+                }
+            }
+            state.settings.scan_dirs.clear();
+            state.settings.save();
+        }
+
+        let mut paths = state.settings.repo_paths.clone();
         paths.sort();
         paths.dedup();
 
         if !paths.is_empty() {
-            state.repos = load_repos_parallel(&paths);
+            let (repos, owner_errors) = load_repos_parallel(&paths);
+            state.repos = repos;
             state.repos.sort_by(|a, b| a.name.cmp(&b.name));
+            state.ui.unsafe_repo_paths = owner_errors;
             info!("loaded {} repos", state.repos.len());
         }
 
@@ -320,15 +329,27 @@ impl eframe::App for App {
             if let Some(path) = rfd::FileDialog::new().pick_folder() {
                 if self.state.repos.iter().any(|r| r.path == path) {
                     // already added — do nothing
-                } else if git2::Repository::open(&path).is_ok() {
-                    self.state.settings.repo_paths.push(path.clone());
-                    self.state.settings.save();
-                    if let Ok(r) = crate::git::load_repo(&path) {
-                        self.state.repos.push(r);
-                        self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
-                    }
                 } else {
-                    self.state.ui.pending_scan_dir = Some(path);
+                    match git2::Repository::open(&path) {
+                        Ok(_) => {
+                            self.state.settings.repo_paths.push(path.clone());
+                            self.state.settings.save();
+                            if let Ok(r) = crate::git::load_repo(&path) {
+                                self.state.repos.push(r);
+                                self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
+                            }
+                        }
+                        Err(ref e) if e.code() == git2::ErrorCode::Owner => {
+                            self.state.settings.repo_paths.push(path.clone());
+                            self.state.settings.save();
+                            if !self.state.ui.unsafe_repo_paths.contains(&path) {
+                                self.state.ui.unsafe_repo_paths.push(path);
+                            }
+                        }
+                        Err(_) => {
+                            self.state.ui.pending_scan_dir = Some(path);
+                        }
+                    }
                 }
             }
         }
@@ -351,16 +372,61 @@ impl eframe::App for App {
                                 .filter(|p| !self.state.repos.iter().any(|r| &r.path == p))
                                 .collect();
                             if !new_paths.is_empty() {
-                                self.state.settings.scan_dirs.push(dir);
+                                for p in &new_paths {
+                                    if !self.state.settings.repo_paths.contains(p) {
+                                        self.state.settings.repo_paths.push(p.clone());
+                                    }
+                                }
                                 self.state.settings.save();
-                                let mut new_repos = load_repos_parallel(&new_paths);
+                                let (mut new_repos, mut owner_errs) = load_repos_parallel(&new_paths);
                                 self.state.repos.append(&mut new_repos);
                                 self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
+                                self.state.ui.unsafe_repo_paths.append(&mut owner_errs);
                             }
                             self.state.ui.pending_scan_dir = None;
                         }
                         if ui.button("Cancel").clicked() {
                             self.state.ui.pending_scan_dir = None;
+                        }
+                    });
+                });
+        }
+
+        // ── Safe-directory prompt ──────────────────────────────────────────────
+        if !self.state.ui.unsafe_repo_paths.is_empty() {
+            egui::Window::new("Repository access restricted")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label("Git's safe.directory check blocked these repositories because they are not owned by the current user:");
+                    ui.add_space(6.0);
+                    for p in &self.state.ui.unsafe_repo_paths {
+                        ui.monospace(p.display().to_string());
+                    }
+                    ui.add_space(8.0);
+                    ui.label("Click \"Add to safe.directory\" to update your global git config and load them.");
+                    ui.add_space(6.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("Add to safe.directory").clicked() {
+                            let paths = std::mem::take(&mut self.state.ui.unsafe_repo_paths);
+                            for path in &paths {
+                                match add_safe_directory(path) {
+                                    Ok(()) => {
+                                        tracing::info!("added {} to safe.directory", path.display());
+                                        if let Ok(r) = crate::git::load_repo(path) {
+                                            self.state.repos.push(r);
+                                        }
+                                    }
+                                    Err(e) => {
+                                        tracing::warn!("could not update safe.directory for {}: {e:#}", path.display());
+                                    }
+                                }
+                            }
+                            self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
+                        }
+                        if ui.button("Dismiss").clicked() {
+                            self.state.ui.unsafe_repo_paths.clear();
                         }
                     });
                 });

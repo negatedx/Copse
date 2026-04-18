@@ -142,6 +142,8 @@ pub struct UiState {
     pub font_search: String,
     /// When true, the font picker shows only likely-monospace families.
     pub font_monospace_only: bool,
+    /// Repos that failed to open due to a git safe.directory ownership check.
+    pub unsafe_repo_paths: Vec<PathBuf>,
 }
 
 impl Default for UiState {
@@ -160,6 +162,7 @@ impl Default for UiState {
             available_fonts: Vec::new(),
             font_search: String::new(),
             font_monospace_only: true,
+            unsafe_repo_paths: Vec::new(),
         }
     }
 }

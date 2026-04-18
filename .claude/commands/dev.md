@@ -26,7 +26,8 @@ If a todo has no `**Priority:**` field, treat it as Medium.
 
 Once selected:
 - Run `/rename` with a short title based on the todo selected. Do not ask for confirmation — just rename.
-- Then restate the todo's **acceptance criteria** so both parties are aligned before any code is written.
+- Restate the todo's **acceptance criteria** so both parties are aligned before any code is written.
+- Ask: **"Anything else you want included in this session?"** Wait for the answer. If the user adds extra work, ask any clarifying questions needed before proceeding. If not, move on.
 
 ## Step 2 — Implement
 

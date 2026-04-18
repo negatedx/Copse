@@ -125,16 +125,27 @@ pub fn load_repo(path: &Path) -> Result<RepoInfo> {
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.to_string_lossy().into_owned());
 
-    let mut worktrees = vec![load_worktree(&repo, path, true)?];
+    let main_wt = match load_worktree(&repo, path, true) {
+        Ok(wt) => wt,
+        Err(e) => {
+            tracing::warn!("failed to load main worktree for {}: {e:#}", path.display());
+            return Err(e);
+        }
+    };
+    let mut worktrees = vec![main_wt];
 
-    // Enumerate linked worktrees
-    let wt_names = repo.worktrees()?;
-    for wt_name in wt_names.iter().flatten() {
-        if let Ok(wt) = repo.find_worktree(wt_name) {
-            let wt_path = PathBuf::from(wt.path());
-            if let Ok(wt_repo) = Repository::open(&wt_path) {
-                if let Ok(info) = load_worktree(&wt_repo, &wt_path, false) {
-                    worktrees.push(info);
+    // Enumerate linked worktrees — non-fatal if the list can't be read.
+    match repo.worktrees() {
+        Err(e) => tracing::warn!("could not list worktrees for {}: {e:#}", path.display()),
+        Ok(wt_names) => {
+            for wt_name in wt_names.iter().flatten() {
+                if let Ok(wt) = repo.find_worktree(wt_name) {
+                    let wt_path = PathBuf::from(wt.path());
+                    if let Ok(wt_repo) = Repository::open(&wt_path) {
+                        if let Ok(info) = load_worktree(&wt_repo, &wt_path, false) {
+                            worktrees.push(info);
+                        }
+                    }
                 }
             }
         }
@@ -150,11 +161,45 @@ pub fn load_repo(path: &Path) -> Result<RepoInfo> {
 }
 
 /// Load multiple repos in parallel using rayon.
-pub fn load_repos_parallel(paths: &[PathBuf]) -> Vec<RepoInfo> {
-    paths
-        .par_iter()
-        .filter_map(|p| load_repo(p).ok())
-        .collect()
+/// Returns `(loaded, owner_error_paths)` — paths where libgit2 rejected the repo
+/// due to a safe.directory ownership mismatch are returned separately so the caller
+/// can prompt the user to fix them.
+pub fn load_repos_parallel(paths: &[PathBuf]) -> (Vec<RepoInfo>, Vec<PathBuf>) {
+    let results: Vec<Result<RepoInfo>> = paths.par_iter().map(|p| load_repo(p)).collect();
+
+    let mut loaded = Vec::new();
+    let mut owner_errors = Vec::new();
+
+    for (path, result) in paths.iter().zip(results) {
+        match result {
+            Ok(r) => loaded.push(r),
+            Err(e) => {
+                if matches!(
+                    git2::Repository::open(path),
+                    Err(ref ge) if ge.code() == git2::ErrorCode::Owner
+                ) {
+                    owner_errors.push(path.clone());
+                } else {
+                    tracing::warn!("skipping {}: {e:#}", path.display());
+                }
+            }
+        }
+    }
+
+    (loaded, owner_errors)
+}
+
+/// Add `path` to the user's global git `safe.directory` config so libgit2 will
+/// open it without an ownership error. Writes to `~/.gitconfig`.
+pub fn add_safe_directory(path: &Path) -> Result<()> {
+    let path_str = path.to_string_lossy().replace('\\', "/");
+    let config_path = git2::Config::find_global().unwrap_or_else(|_| {
+        dirs::home_dir().unwrap_or_default().join(".gitconfig")
+    });
+    let mut config = git2::Config::open(&config_path)?;
+    // set_multivar with a regexp that won't match any path value adds a new entry.
+    config.set_multivar("safe.directory", "^$", &path_str)?;
+    Ok(())
 }
 
 // ── Worktree loading ───────────────────────────────────────────────────────────
