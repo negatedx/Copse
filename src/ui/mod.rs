@@ -38,7 +38,7 @@ impl App {
         drop(tx);
 
         let mut state = AppState::new(rx);
-        let paths = state
+        let mut paths = state
             .settings
             .repo_paths
             .iter()
@@ -51,6 +51,8 @@ impl App {
                     .flat_map(|d| discover_repos_in_dir(d)),
             )
             .collect::<Vec<_>>();
+        paths.sort();
+        paths.dedup();
 
         if !paths.is_empty() {
             state.repos = load_repos_parallel(&paths);
@@ -225,7 +227,28 @@ impl eframe::App for App {
                     self.state.selection.file_idx = Some(idx);
                     self.refresh_diff();
                 }
-                ui.separator();
+
+                // Draggable divider between CHANGES and HISTORY
+                let (sep_rect, sep_resp) = ui.allocate_exact_size(
+                    egui::Vec2::new(ui.available_width(), 6.0),
+                    egui::Sense::drag(),
+                );
+                if sep_resp.hovered() || sep_resp.dragged() {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+                }
+                if sep_resp.dragged() {
+                    let new_h = self.state.settings.changes_panel_height + sep_resp.drag_delta().y;
+                    self.state.settings.changes_panel_height = new_h.max(60.0);
+                }
+                if sep_resp.drag_stopped() {
+                    self.state.settings.save();
+                }
+                ui.painter().hline(
+                    sep_rect.x_range(),
+                    sep_rect.center().y,
+                    egui::Stroke::new(1.0, egui::Color32::from_gray(80)),
+                );
+
                 if let Some(graph_action) = graph::show(ui, &self.state) {
                     self.handle_graph_action(graph_action);
                 }

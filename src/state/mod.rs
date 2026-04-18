@@ -25,10 +25,17 @@ pub struct Settings {
     /// UI scale multiplier applied on top of the system DPI (1.0 = native).
     #[serde(default = "default_ui_scale")]
     pub ui_scale: f32,
+    /// Height of the CHANGES panel in the middle column (pixels, pre-scale).
+    #[serde(default = "default_changes_panel_height")]
+    pub changes_panel_height: f32,
 }
 
 fn default_ui_scale() -> f32 {
     1.0
+}
+
+fn default_changes_panel_height() -> f32 {
+    200.0
 }
 
 impl Default for Settings {
@@ -39,6 +46,7 @@ impl Default for Settings {
             history_limit: 100,
             theme: Theme::Dark,
             ui_scale: 1.0,
+            changes_panel_height: 200.0,
         }
     }
 }

@@ -78,20 +78,7 @@
 
 ---
 
-## 7. Repo list should be deduplicated on path
-
-**Problem:** When scanning a directory for repos, repos already in the list can be added again, creating duplicates.
-
-**Acceptance criteria:**
-- Adding a repo that is already in the list (by path) does nothing silently, or shows a brief message
-- Scanning a directory skips any paths already present in `state.repos`
-- Applies to both single-repo add and bulk scan
-
-**Notes:** The scan path already filters (`!self.state.repos.iter().any(|r| &r.path == p)`) but the single-repo add path (`git2::Repository::open` branch) may not.
-
----
-
-## 8. Fix commit graph rendering: disconnected nodes and missing spacing
+## 7. Fix commit graph rendering: disconnected nodes and missing spacing
 
 **Problem:** In the HISTORY panel, commit graph nodes are not connected by lines between them. Additionally, the commit hash and date are rendered with no space between them, making the text run together and hard to read.
 
@@ -101,5 +88,18 @@
 - Layout remains consistent across varying numbers of branches
 
 **Notes:** Graph drawing is in `src/ui/graph.rs`. Check the node connector painting logic for missing line segments between rows, and the commit row label layout for the hash/date spacing.
+
+---
+
+## 8. Repos and worktrees should be listed alphabetically
+
+**Problem:** The sidebar lists repos in the order they were added or discovered, and worktrees in the order libgit2 returns them. With many repos, finding a specific one requires scanning the whole list rather than knowing roughly where to look.
+
+**Acceptance criteria:**
+- Repos are sorted alphabetically by directory name in the sidebar
+- Worktrees within each repo are sorted alphabetically by path
+- Sort is applied on initial load, after adding a repo, and after a watcher-triggered reload
+
+**Notes:** Sorting belongs in `state/mod.rs` or at the call sites in `ui/mod.rs` (after `load_repos_parallel`, after `load_repo` pushes a new entry), not in `ui/sidebar.rs`. A simple `sort_by` on the repo name and worktree path is sufficient.
 
 ---

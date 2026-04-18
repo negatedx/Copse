@@ -9,7 +9,10 @@
       "args": [],
       "cwd": "${workspaceFolder}",
       "env": { "RUST_LOG": "gitwatcher=debug" },
-      "preLaunchTask": "cargo build"
+      "preLaunchTask": "cargo build",
+      "initCommands": [
+        "settings set symbols.enable-external-lookup false"
+      ]
     }
   ]
 }

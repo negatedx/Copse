@@ -79,7 +79,10 @@ For manual testing, point the app at a directory containing multiple repos with 
 
 ## Build
 
+**Working directory for all cargo commands is `src/` — the `Cargo.toml` lives there, not at the repo root.**
+
 ```bash
+cd src
 cargo build           # debug
 cargo build --release # optimised, stripped binary (~5MB typical)
 cargo clippy          # lint — fix all warnings before committing

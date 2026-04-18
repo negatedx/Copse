@@ -29,5 +29,12 @@ Run `cargo build` in the `src/` directory. Fix any compile errors and rebuild un
 
 Ask: **"Todo #N is implemented and builds clean. Is it done, or should I keep iterating?"**
 
-- **Done** — remove the entire `## N. Title` block (through its trailing `---`) from `todos.md`, renumber remaining `## N.` headings sequentially, confirm: "Removed. Remaining todos renumbered."
+- **Done** — remove the entire `## N. Title` block (through its trailing `---`) from `todos.md`, renumber remaining `## N.` headings sequentially, confirm: "Removed. Remaining todos renumbered." Then go to Step 5.
 - **Not done** — ask "What did you observe or what needs to change?" then return to Step 2 and repeat until confirmed done.
+
+## Step 5 — Commit and push
+
+Ask: **"Commit and push?"**
+
+- **Yes** — stage all modified tracked files (`git add -u`), write a concise commit message summarising the change (no co-author line unless the user asks), push to the current branch's remote, and report the commit hash and push result.
+- **No** — stop here.
