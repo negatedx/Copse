@@ -6,8 +6,8 @@ mod sidebar;
 
 use crate::{
     git::{
-        discover_repos_in_dir, get_commit_file_diff, get_commit_files, get_commits, get_file_diff,
-        load_repos_parallel,
+        discover_repos_in_dir, get_commit_file_diff, get_commit_files, get_commits,
+        get_file_content_as_diff, get_file_diff, load_repos_parallel, ChangeStatus,
     },
     state::{AppState, Selection, Theme},
     watcher::{all_watch_paths, spawn_watcher},
@@ -162,7 +162,12 @@ impl App {
         };
 
         self.state.ui.diff_hunks = if self.state.ui.viewing_pending {
-            get_file_diff(&repo_path, &file.path).unwrap_or_default()
+            match file.status {
+                ChangeStatus::Added | ChangeStatus::Untracked => {
+                    get_file_content_as_diff(&repo_path, &file.path).unwrap_or_default()
+                }
+                _ => get_file_diff(&repo_path, &file.path).unwrap_or_default(),
+            }
         } else if let Some(ref commit_id) = self.state.ui.selected_commit_id.clone() {
             get_commit_file_diff(&repo_path, commit_id, &file.path).unwrap_or_default()
         } else {

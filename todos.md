@@ -2,20 +2,7 @@
 
 ---
 
-## 1. More visual settings — font and font size
-
-**Problem:** There is currently no way to change the font family or font size. The UI scale slider exists but font selection is missing.
-
-**Acceptance criteria:**
-- User can select from a small set of available fonts (e.g. system default, monospace)
-- User can adjust font size independently of UI scale
-- Settings persist across sessions
-
-**Notes:** egui supports loading custom fonts via `egui::FontDefinitions`. Font size can be controlled via `egui::Style::text_styles`.
-
----
-
-## 2. Some icons are not rendering correctly
+## Some icons are not rendering correctly
 
 **Problem:** Several unicode glyphs used as icons (e.g. ⌕, ⚙, chevrons) may not render correctly depending on the system font — showing as boxes or missing entirely.
 
@@ -27,7 +14,7 @@
 
 ---
 
-## 3. UI is too small and tight generally
+## UI is too small and tight generally
 
 **Problem:** Row heights, padding, and hit targets are too small. Text is cramped and the UI feels dense and hard to use.
 
@@ -40,7 +27,7 @@
 
 ---
 
-## 4. Show hand cursor when hovering over clickable elements
+## Show hand cursor when hovering over clickable elements
 
 **Problem:** The cursor stays as an arrow over all clickable rows and buttons, giving no affordance that something is interactive.
 
@@ -52,7 +39,7 @@
 
 ---
 
-## 5. Changes panel height should be resizable and persist
+## Changes panel height should be resizable and persist
 
 **Problem:** The CHANGES panel has a fixed `max_height(200)`. When switching between pending changes and a commit with more/fewer files, the history panel jumps around.
 
@@ -65,7 +52,7 @@
 
 ---
 
-## 6. Colour themes need work
+## Colour themes need work
 
 **Problem:** The Light theme has text that is very hard to read in places. Diff colours (added/removed lines) look too bold/saturated in both themes.
 
@@ -78,7 +65,7 @@
 
 ---
 
-## 7. Fix commit graph rendering: disconnected nodes and missing spacing
+## Fix commit graph rendering: disconnected nodes and missing spacing
 
 **Problem:** In the HISTORY panel, commit graph nodes are not connected by lines between them. Additionally, the commit hash and date are rendered with no space between them, making the text run together and hard to read.
 
@@ -91,7 +78,7 @@
 
 ---
 
-## 8. Repos and worktrees should be listed alphabetically
+## Repos and worktrees should be listed alphabetically
 
 **Problem:** The sidebar lists repos in the order they were added or discovered, and worktrees in the order libgit2 returns them. With many repos, finding a specific one requires scanning the whole list rather than knowing roughly where to look.
 
@@ -101,5 +88,31 @@
 - Sort is applied on initial load, after adding a repo, and after a watcher-triggered reload
 
 **Notes:** Sorting belongs in `state/mod.rs` or at the call sites in `ui/mod.rs` (after `load_repos_parallel`, after `load_repo` pushes a new entry), not in `ui/sidebar.rs`. A simple `sort_by` on the repo name and worktree path is sufficient.
+
+---
+
+## Scrollbar not pinned to right edge in CHANGES and HISTORY panels
+
+**Problem:** The vertical scrollbar in both the CHANGES and HISTORY panels does not appear flush against the right edge of the middle panel — it floats inside the content area instead.
+
+**Acceptance criteria:**
+- Scrollbar appears at the right edge of the middle panel in both the CHANGES and HISTORY panels
+- File list and commit list content fills the full available width up to the scrollbar
+- Behaviour is consistent whether the panel is at default width or resized
+
+**Notes:** CHANGES scroll area is in `src/ui/pending.rs` (inside a `child_ui`); HISTORY scroll area is in `src/ui/graph.rs`. Both use `ScrollArea::vertical()` — the scrollbar anchor or available-width calculation likely needs fixing in both.
+
+---
+
+## Selected repo is not clearly highlighted in the sidebar
+
+**Problem:** When a repo is selected in the sidebar, it is not visually distinct enough from unselected repos — it's hard to tell at a glance which repo is active.
+
+**Acceptance criteria:**
+- The selected repo row has a clearly visible highlight (background colour, left accent bar, or similar)
+- The highlight is distinct in both Dark and Light themes
+- Selecting a different repo moves the highlight immediately
+
+**Notes:** Sidebar rendering is in `src/ui/sidebar.rs`. Check how the selected state is currently rendered for repo rows vs worktree rows — worktree rows may already have a highlight to use as reference.
 
 ---

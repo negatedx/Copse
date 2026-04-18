@@ -369,6 +369,41 @@ pub fn get_commit_file_diff(
 
 // ── File diff (working tree) ───────────────────────────────────────────────────
 
+/// Read an untracked/added file and return its full content as synthetic Added hunks.
+pub fn get_file_content_as_diff(repo_path: &Path, file_path: &Path) -> Result<Vec<DiffHunk>> {
+    let full_path = repo_path.join(file_path);
+    let bytes = std::fs::read(&full_path)
+        .with_context(|| format!("failed to read {}", full_path.display()))?;
+
+    if bytes.contains(&0u8) {
+        return Ok(vec![DiffHunk {
+            header: "Binary file (new file)".to_string(),
+            lines: vec![],
+        }]);
+    }
+
+    let text = String::from_utf8_lossy(&bytes);
+    let lines: Vec<DiffLine> = text
+        .lines()
+        .enumerate()
+        .map(|(i, line)| DiffLine {
+            kind: DiffLineKind::Added,
+            old_lineno: None,
+            new_lineno: Some((i + 1) as u32),
+            content: line.to_string(),
+        })
+        .collect();
+
+    if lines.is_empty() {
+        return Ok(vec![]);
+    }
+
+    Ok(vec![DiffHunk {
+        header: format!("@@ -0,0 +1,{} @@", lines.len()),
+        lines,
+    }])
+}
+
 pub fn get_file_diff(repo_path: &Path, file_path: &Path) -> Result<Vec<DiffHunk>> {
     let repo = Repository::open(repo_path)?;
     let mut opts = DiffOptions::new();
