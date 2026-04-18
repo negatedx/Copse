@@ -4,6 +4,7 @@ use git2::{Delta, DiffOptions, Repository, Status, StatusOptions};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -74,6 +75,8 @@ pub struct CommitInfo {
     pub time: DateTime<Local>,
     pub is_head: bool,
     pub branches: Vec<String>,
+    #[serde(default)]
+    pub head_branch: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -292,11 +295,32 @@ fn get_ahead_behind(repo: &Repository) -> Result<(usize, usize)> {
 
 pub fn get_commits(repo_path: &Path, limit: usize) -> Result<Vec<CommitInfo>> {
     let repo = Repository::open(repo_path)?;
+
+    // Build OID → branch names map for all local and remote branches.
+    let mut oid_branches: HashMap<git2::Oid, Vec<String>> = HashMap::new();
+    if let Ok(branches) = repo.branches(None) {
+        for branch_result in branches {
+            let Ok((branch, _)) = branch_result else { continue };
+            let Some(name) = branch.name().ok().flatten() else { continue };
+            let name = name.to_string();
+            let Some(oid) = branch.get().target() else { continue };
+            oid_branches.entry(oid).or_default().push(name);
+        }
+    }
+    for names in oid_branches.values_mut() {
+        names.sort();
+    }
+
+    let head_ref = repo.head().ok();
+    let head_id = head_ref.as_ref().and_then(|h| h.target());
+    let head_branch: Option<String> = head_ref
+        .as_ref()
+        .filter(|h| h.is_branch())
+        .and_then(|h| h.shorthand().map(String::from));
+
     let mut revwalk = repo.revwalk()?;
     revwalk.push_head()?;
     revwalk.set_sorting(git2::Sort::TIME)?;
-
-    let head_id = repo.head().ok().and_then(|h| h.target());
 
     let mut commits = Vec::new();
     for (i, oid) in revwalk.enumerate() {
@@ -310,18 +334,19 @@ pub fn get_commits(repo_path: &Path, limit: usize) -> Result<Vec<CommitInfo>> {
             .single()
             .unwrap_or_else(Local::now);
 
+        let is_head = Some(oid) == head_id;
+        let branches = oid_branches.remove(&oid).unwrap_or_default();
+        let hb = if is_head { head_branch.clone() } else { None };
+
         commits.push(CommitInfo {
             short_id: oid.to_string()[..7].to_string(),
             id: oid.to_string(),
-            message: commit
-                .summary()
-                .unwrap_or("")
-                .trim()
-                .to_string(),
+            message: commit.summary().unwrap_or("").trim().to_string(),
             author: commit.author().name().unwrap_or("").to_string(),
             time,
-            is_head: Some(oid) == head_id,
-            branches: vec![],
+            is_head,
+            branches,
+            head_branch: hb,
         });
     }
 

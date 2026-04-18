@@ -17,6 +17,8 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
     let sel_color = ui.visuals().strong_text_color();
     let branch_bg = if dark { Color32::from_rgb(20, 40, 70) } else { Color32::from_rgb(210, 225, 255) };
     let branch_fg = if dark { Color32::from_rgb(100, 160, 240) } else { Color32::from_rgb(20, 80, 180) };
+    let head_branch_bg = if dark { Color32::from_rgb(15, 55, 25) } else { Color32::from_rgb(210, 242, 215) };
+    let head_branch_fg = if dark { Color32::from_rgb(80, 200, 100) } else { Color32::from_rgb(15, 120, 40) };
 
     ui.add_space(4.0);
     ui.label(RichText::new("HISTORY").size(10.0).color(Color32::GRAY));
@@ -127,6 +129,23 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                             } else {
                                 commit.message.clone()
                             };
+                            if !commit.branches.is_empty() {
+                                ui.horizontal_wrapped(|ui| {
+                                    ui.spacing_mut().item_spacing.x = 4.0;
+                                    for branch in &commit.branches {
+                                        let is_hb = commit.head_branch.as_deref() == Some(branch.as_str());
+                                        let (fg, bg) = if is_hb { (head_branch_fg, head_branch_bg) } else { (branch_fg, branch_bg) };
+                                        let display = if branch.chars().count() > 24 {
+                                            let end = branch.char_indices().nth(23).map(|(i, _)| i).unwrap_or(branch.len());
+                                            format!("{}…", &branch[..end])
+                                        } else {
+                                            branch.clone()
+                                        };
+                                        let label = RichText::new(display).size(11.0).color(fg).background_color(bg);
+                                        ui.label(if is_hb { label.strong() } else { label });
+                                    }
+                                });
+                            }
                             ui.label(RichText::new(&msg).size(13.0).color(msg_color));
                             ui.push_id("meta", |ui| {
                                 ui.horizontal_wrapped(|ui| {
@@ -137,11 +156,6 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                                     ui.label(RichText::new(commit.time.format("%d/%m/%y\u{00A0}%H:%M").to_string()).size(11.0).color(Color32::GRAY));
                                 });
                             });
-                            for branch in &commit.branches {
-                                ui.label(RichText::new(branch).size(11.0)
-                                    .color(branch_fg)
-                                    .background_color(branch_bg));
-                            }
                             ui.add_space(6.0);
                         });
                     });

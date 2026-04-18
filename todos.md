@@ -103,22 +103,21 @@
 
 ---
 
-## Show branch names on commit graph
 
-**Priority:** High
 
-**Problem:** The HISTORY panel shows commits but gives no indication of which commit each branch (local or remote) points to. It's impossible to see branch positions at a glance.
+## Fix all compiler warnings
+
+**Priority:** Low
+
+**Problem:** `cargo build` emits 7 warnings every build — unused imports (`WalkDir`, `all_watch_paths`, `spawn_watcher`) and dead code (`is_clean`, `Selection::repo`, `spawn_watcher`, `run_watcher`, `all_watch_paths` in watcher). These mask real new warnings that may appear in future.
 
 **Acceptance criteria:**
-- Each commit row that is the tip of one or more branches shows the branch name(s) as a pill/label beside the commit message
-- Local and remote-tracking branches (e.g. `main`, `origin/main`) are both shown
-- HEAD branch is visually distinct (e.g. bold or different colour)
-- Labels don't overflow or obscure the commit message — truncate or wrap if needed
+- `cargo build` produces zero warnings
+- Dead code is either removed or, if intentionally kept for future use, suppressed with `#[allow(dead_code)]` and a comment explaining why
 
-**Notes:** `CommitInfo.branches` in `git/mod.rs` exists but is always `vec![]`. Populate it in `get_commits` by building a map of OID → branch names from `repo.branches(None)` before the revwalk, then assign matches per commit. Rendering belongs in `src/ui/graph.rs`.
+**Notes:** Warnings are in `src/git/mod.rs` (unused `walkdir`), `src/ui/mod.rs` (unused watcher imports), `src/state/mod.rs` (`Selection::repo`), `src/watcher/mod.rs` (entire public API unused). The watcher module may be intentionally scaffolded for future use — check before deleting.
 
 ---
-
 
 ## Hide expand icon for single-worktree repos
 
