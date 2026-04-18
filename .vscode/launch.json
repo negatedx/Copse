@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb-dap",
+      "request": "launch",
+      "name": "Debug",
+      "program": "${workspaceFolder}/src/target/debug/gitwatcher.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "env": { "RUST_LOG": "gitwatcher=debug" },
+      "preLaunchTask": "cargo build"
+    }
+  ]
+}
