@@ -4,13 +4,29 @@ Work through a todo item from `todos.md` using the structured dev loop below.
 
 Read `todos.md`. The user may invoke this command with varying levels of detail in $ARGUMENTS:
 
-- **No arguments** — display a compact list (title + first line of Problem) and ask: "Which todo do you want to work on?"
+- **No arguments** — display a compact list grouped by priority (High → Medium → Low), showing title + first line of Problem for each. Ask: "Which todo do you want to work on?"
 - **A keyword or partial title** (e.g. "remove button", "cursor") — find the best matching todo, state which one you matched, and confirm before proceeding. If ambiguous, show the candidates and ask.
 - **A keyword plus extra context** (e.g. "cursor focus on the row heights first") — select that todo and treat the extra context as additional guidance for the implementation.
 
+When displaying the compact list, use priority headings:
+```
+**High**
+1. Title — Problem first line
+...
+
+**Medium**
+5. Title — Problem first line
+...
+
+**Low**
+8. Title — Problem first line
+```
+
+If a todo has no `**Priority:**` field, treat it as Medium.
+
 Once selected:
-- Run `/rename` with a short title based on the todo selected. Do not ask for confirmation — just rename.  
-- then restate the todo's **acceptance criteria** so both parties are aligned before any code is written.
+- Run `/rename` with a short title based on the todo selected. Do not ask for confirmation — just rename.
+- Then restate the todo's **acceptance criteria** so both parties are aligned before any code is written.
 
 ## Step 2 — Implement
 

@@ -89,6 +89,7 @@ impl App {
 
         if !paths.is_empty() {
             state.repos = load_repos_parallel(&paths);
+            state.repos.sort_by(|a, b| a.name.cmp(&b.name));
             info!("loaded {} repos", state.repos.len());
         }
 
@@ -324,6 +325,7 @@ impl eframe::App for App {
                     self.state.settings.save();
                     if let Ok(r) = crate::git::load_repo(&path) {
                         self.state.repos.push(r);
+                        self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
                     }
                 } else {
                     self.state.ui.pending_scan_dir = Some(path);
@@ -353,6 +355,7 @@ impl eframe::App for App {
                                 self.state.settings.save();
                                 let mut new_repos = load_repos_parallel(&new_paths);
                                 self.state.repos.append(&mut new_repos);
+                                self.state.repos.sort_by(|a, b| a.name.cmp(&b.name));
                             }
                             self.state.ui.pending_scan_dir = None;
                         }

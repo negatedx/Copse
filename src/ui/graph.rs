@@ -50,6 +50,8 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
             let wt_x = ui.cursor().min.x;
             let wt_w = ui.available_width();
 
+            let wt_bg_idx = ui.painter().add(egui::Shape::Noop);
+
             ui.push_id(("graph", "wt"), |ui| {
                 ui.horizontal(|ui| {
                     ui.add_space(8.0);
@@ -83,6 +85,11 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
             });
 
             let wt_rect = Rect::from_min_max(pos2(wt_x, wt_y), pos2(wt_x + wt_w, ui.cursor().min.y));
+            if pending_selected {
+                let bg_fill = ui.visuals().selection.bg_fill.gamma_multiply(0.4);
+                ui.painter().set(wt_bg_idx, egui::Shape::rect_filled(wt_rect, 0.0, bg_fill));
+                ui.painter().vline(wt_x, wt_y..=wt_rect.max.y, egui::Stroke::new(3.0, sel_color));
+            }
             if ui.interact(wt_rect, Id::new("graph_wt_click"), Sense::click()).clicked() {
                 action = Some(GraphAction::SelectPending);
             }
@@ -94,6 +101,8 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                 let row_y = ui.cursor().min.y;
                 let row_x = ui.cursor().min.x;
                 let row_w = ui.available_width();
+
+                let row_bg_idx = ui.painter().add(egui::Shape::Noop);
 
                 ui.push_id(("graph", i), |ui| {
                     ui.horizontal(|ui| {
@@ -139,6 +148,11 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                 });
 
                 let row_rect = Rect::from_min_max(pos2(row_x, row_y), pos2(row_x + row_w, ui.cursor().min.y));
+                if is_sel {
+                    let bg_fill = ui.visuals().selection.bg_fill.gamma_multiply(0.4);
+                    ui.painter().set(row_bg_idx, egui::Shape::rect_filled(row_rect, 0.0, bg_fill));
+                    ui.painter().vline(row_x, row_y..=row_rect.max.y, egui::Stroke::new(3.0, sel_color));
+                }
                 if ui.interact(row_rect, Id::new(("graph_commit_click", i)), Sense::click()).clicked() {
                     action = Some(GraphAction::SelectCommit(i));
                 }

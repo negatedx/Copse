@@ -70,6 +70,9 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                 let row_x = ui.cursor().min.x;
                 let row_w = ui.available_width();
 
+                // Reserve a background shape slot; filled in once we know the row height.
+                let bg_idx = ui.painter().add(egui::Shape::Noop);
+
                 ui.push_id(("repo", repo_idx), |ui| {
                     ui.horizontal(|ui| {
                         ui.add_space(6.0);
@@ -111,6 +114,15 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                     pos2(row_x, row_y),
                     pos2(row_x + row_w - 36.0, ui.cursor().min.y),
                 );
+                let full_row_rect = Rect::from_min_max(
+                    pos2(row_x, row_y),
+                    pos2(row_x + row_w, ui.cursor().min.y),
+                );
+                if repo_selected {
+                    let bg_fill = ui.visuals().selection.bg_fill.gamma_multiply(0.4);
+                    ui.painter().set(bg_idx, egui::Shape::rect_filled(full_row_rect, 0.0, bg_fill));
+                    ui.painter().vline(row_x, row_y..=full_row_rect.max.y, egui::Stroke::new(3.0, sel_color));
+                }
                 let row_resp = ui.interact(row_rect, Id::new(("repo_click", repo_idx)), Sense::click());
                 if row_resp.hovered() {
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
@@ -135,6 +147,8 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                         let wt_y = ui.cursor().min.y;
                         let wt_x = ui.cursor().min.x;
                         let wt_w = ui.available_width();
+
+                        let wt_bg_idx = ui.painter().add(egui::Shape::Noop);
 
                         ui.push_id(("wt", repo_idx, wt_idx), |ui| {
                             ui.horizontal(|ui| {
@@ -164,6 +178,11 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                             pos2(wt_x, wt_y),
                             pos2(wt_x + wt_w, ui.cursor().min.y),
                         );
+                        if is_active {
+                            let bg_fill = ui.visuals().selection.bg_fill.gamma_multiply(0.4);
+                            ui.painter().set(wt_bg_idx, egui::Shape::rect_filled(wt_rect, 0.0, bg_fill));
+                            ui.painter().vline(wt_x, wt_y..=wt_rect.max.y, egui::Stroke::new(3.0, sel_color));
+                        }
                         if ui.interact(wt_rect, Id::new(("wt_click", repo_idx, wt_idx)), Sense::click()).clicked() {
                             action = Some(SidebarAction::Select(Selection::worktree(repo_idx, wt_idx)));
                         }

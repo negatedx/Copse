@@ -59,6 +59,8 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
                     let row_x = ui.cursor().min.x;
                     let row_w = ui.available_width();
 
+                    let bg_idx = ui.painter().add(egui::Shape::Noop);
+
                     ui.push_id(("pending", i), |ui| {
                         ui.horizontal(|ui| {
                             ui.add_space(8.0);
@@ -70,6 +72,11 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
                     });
 
                     let row_rect = Rect::from_min_max(pos2(row_x, row_y), pos2(row_x + row_w, ui.cursor().min.y));
+                    if is_sel {
+                        let bg_fill = ui.visuals().selection.bg_fill.gamma_multiply(0.4);
+                        ui.painter().set(bg_idx, egui::Shape::rect_filled(row_rect, 0.0, bg_fill));
+                        ui.painter().vline(row_x, row_y..=row_rect.max.y, egui::Stroke::new(3.0, sel_color));
+                    }
                     let resp = ui.interact(row_rect, Id::new(("pending_click", i)), Sense::click());
 
                     if resp.clicked() {

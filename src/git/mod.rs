@@ -140,6 +140,8 @@ pub fn load_repo(path: &Path) -> Result<RepoInfo> {
         }
     }
 
+    worktrees.sort_by(|a, b| a.path.cmp(&b.path));
+
     Ok(RepoInfo {
         name,
         path: path.to_owned(),

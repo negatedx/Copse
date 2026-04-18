@@ -4,6 +4,8 @@
 
 ## Some icons are not rendering correctly
 
+**Priority:** Medium
+
 **Problem:** Several unicode glyphs used as icons (e.g. ⌕, ⚙, chevrons) may not render correctly depending on the system font — showing as boxes or missing entirely.
 
 **Acceptance criteria:**
@@ -15,6 +17,8 @@
 ---
 
 ## UI is too small and tight generally
+
+**Priority:** Medium
 
 **Problem:** Row heights, padding, and hit targets are too small. Text is cramped and the UI feels dense and hard to use.
 
@@ -28,6 +32,8 @@
 ---
 
 ## Show hand cursor when hovering over clickable elements
+
+**Priority:** Medium
 
 **Problem:** The cursor stays as an arrow over all clickable rows and buttons, giving no affordance that something is interactive.
 
@@ -53,20 +59,9 @@
 ---
 
 
-## Repos and worktrees should be listed alphabetically
-
-**Problem:** The sidebar lists repos in the order they were added or discovered, and worktrees in the order libgit2 returns them. With many repos, finding a specific one requires scanning the whole list rather than knowing roughly where to look.
-
-**Acceptance criteria:**
-- Repos are sorted alphabetically by directory name in the sidebar
-- Worktrees within each repo are sorted alphabetically by path
-- Sort is applied on initial load, after adding a repo, and after a watcher-triggered reload
-
-**Notes:** Sorting belongs in `state/mod.rs` or at the call sites in `ui/mod.rs` (after `load_repos_parallel`, after `load_repo` pushes a new entry), not in `ui/sidebar.rs`. A simple `sort_by` on the repo name and worktree path is sufficient.
-
----
-
 ## Scrollbar not pinned to right edge in CHANGES and HISTORY panels
+
+**Priority:** Medium
 
 **Problem:** The vertical scrollbar in both the CHANGES and HISTORY panels does not appear flush against the right edge of the middle panel — it floats inside the content area instead.
 
@@ -81,6 +76,8 @@
 
 ## Selected repo is not clearly highlighted in the sidebar
 
+**Priority:** High
+
 **Problem:** When a repo is selected in the sidebar, it is not visually distinct enough from unselected repos — it's hard to tell at a glance which repo is active.
 
 **Acceptance criteria:**
@@ -93,6 +90,8 @@
 ---
 
 ## Show branch names on commit graph
+
+**Priority:** High
 
 **Problem:** The HISTORY panel shows commits but gives no indication of which commit each branch (local or remote) points to. It's impossible to see branch positions at a glance.
 
@@ -108,6 +107,8 @@
 
 ## Repo persistence is broken for scanned directories
 
+**Priority:** High
+
 **Problem:** Repos discovered via directory scan are re-discovered from scratch on every launch. This means: (1) repos explicitly removed by the user reappear after restart because the scan dir is still in settings, and (2) the app's repo list is unstable across sessions.
 
 **Acceptance criteria:**
@@ -116,5 +117,22 @@
 - Manually added repos are unaffected
 
 **Notes:** On startup, `scan_dirs` are re-scanned via `discover_repos_in_dir`, overriding any user removals. Simplest fix: after the initial scan, convert discovered paths into explicit `repo_paths` entries and drop the `scan_dir` from settings (one-shot expansion). Alternatively, add a `removed_repo_paths: Vec<PathBuf>` blocklist to `Settings` as a filter. The one-shot expansion is simpler and avoids the blocklist growing unboundedly.
+
+---
+
+## Side-by-side diff view toggle
+
+**Priority:** Low
+
+**Problem:** The diff panel only shows unified diff. Side-by-side diff is easier to read for small changes, but requires more horizontal space — it's not always appropriate.
+
+**Acceptance criteria:**
+- A toggle button in the diff panel header switches between unified and side-by-side view
+- The toggle is only shown (or enabled) when the diff panel is wide enough to render two columns legibly
+- Side-by-side view splits the old and new file into left/right columns with line numbers on each side
+- Removed lines appear on the left only, added lines on the right only, unchanged context on both
+- The chosen mode persists across sessions (saved to settings)
+
+**Notes:** Rendering is in `src/ui/diff.rs`. A minimum panel width threshold (e.g. ~600px) can gate the toggle. `UiState` or `Settings` can hold the `diff_side_by_side: bool` flag; `Settings` if persistence is wanted.
 
 ---
