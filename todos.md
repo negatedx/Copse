@@ -74,21 +74,6 @@
 
 ---
 
-## Selected repo is not clearly highlighted in the sidebar
-
-**Priority:** High
-
-**Problem:** When a repo is selected in the sidebar, it is not visually distinct enough from unselected repos — it's hard to tell at a glance which repo is active.
-
-**Acceptance criteria:**
-- The selected repo row has a clearly visible highlight (background colour, left accent bar, or similar)
-- The highlight is distinct in both Dark and Light themes
-- Selecting a different repo moves the highlight immediately
-
-**Notes:** Sidebar rendering is in `src/ui/sidebar.rs`. Check how the selected state is currently rendered for repo rows vs worktree rows — worktree rows may already have a highlight to use as reference.
-
----
-
 ## Show branch names on commit graph
 
 **Priority:** High
