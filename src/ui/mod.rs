@@ -13,15 +13,48 @@ use crate::{
     watcher::{all_watch_paths, spawn_watcher},
 };
 use eframe::CreationContext;
-use egui::{CentralPanel, Context, SidePanel, Visuals};
+use egui::{CentralPanel, Context, FontId, SidePanel, TextStyle, Visuals};
 use sidebar::SidebarAction;
 use std::sync::mpsc;
 use tracing::info;
+
+fn apply_font_size(ctx: &Context, font_size: f32) {
+    let mut style = (*ctx.style()).clone();
+    style.text_styles = [
+        (TextStyle::Small, FontId::new(font_size * 0.8, egui::FontFamily::Proportional)),
+        (TextStyle::Body, FontId::new(font_size, egui::FontFamily::Proportional)),
+        (TextStyle::Button, FontId::new(font_size, egui::FontFamily::Proportional)),
+        (TextStyle::Heading, FontId::new(font_size * 1.4, egui::FontFamily::Proportional)),
+        (TextStyle::Monospace, FontId::new(font_size, egui::FontFamily::Monospace)),
+    ]
+    .into();
+    ctx.set_style(style);
+}
+
+fn load_font(ctx: &Context, font_name: &str, available_fonts: &[(String, std::path::PathBuf)]) {
+    let mut fonts = egui::FontDefinitions::default();
+    if !font_name.is_empty() {
+        if let Some((_, path)) = available_fonts.iter().find(|(n, _)| n == font_name) {
+            if let Ok(data) = std::fs::read(path) {
+                fonts.font_data.insert(font_name.to_owned(), egui::FontData::from_owned(data));
+                // Apply to both families so diff/monospace text uses the same font.
+                for family in [egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
+                    fonts.families.get_mut(&family).unwrap().insert(0, font_name.to_owned());
+                }
+            } else {
+                tracing::warn!("could not read font file: {}", path.display());
+            }
+        }
+    }
+    ctx.set_fonts(fonts);
+}
 
 pub struct App {
     state: AppState,
     system_dark: bool,
     system_ppp: f32,
+    /// Tracks which font is currently loaded so we only call set_fonts when it changes.
+    loaded_font_name: String,
 }
 
 impl App {
@@ -64,7 +97,13 @@ impl App {
             cc.egui_ctx.set_pixels_per_point(system_ppp * state.settings.ui_scale);
         }
 
-        Self { state, system_dark, system_ppp }
+        // Populate font list and apply any persisted font before the first frame.
+        state.ui.available_fonts = settings::enumerate_fonts();
+        let loaded_font_name = state.settings.font_name.clone();
+        load_font(&cc.egui_ctx, &loaded_font_name, &state.ui.available_fonts);
+        apply_font_size(&cc.egui_ctx, state.settings.font_size);
+
+        Self { state, system_dark, system_ppp, loaded_font_name }
     }
 
     fn poll_watcher(&mut self) {
@@ -178,6 +217,13 @@ impl eframe::App for App {
             }
         };
         ctx.set_visuals(visuals);
+
+        let desired_font = self.state.settings.font_name.clone();
+        if desired_font != self.loaded_font_name {
+            load_font(ctx, &desired_font, &self.state.ui.available_fonts);
+            self.loaded_font_name = desired_font;
+        }
+        apply_font_size(ctx, self.state.settings.font_size);
 
         ctx.request_repaint_after(std::time::Duration::from_millis(500));
 

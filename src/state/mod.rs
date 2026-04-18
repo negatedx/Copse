@@ -10,6 +10,7 @@ pub enum Theme {
     System,
 }
 
+
 /// Persisted settings saved to disk between sessions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
@@ -28,6 +29,12 @@ pub struct Settings {
     /// Height of the CHANGES panel in the middle column (pixels, pre-scale).
     #[serde(default = "default_changes_panel_height")]
     pub changes_panel_height: f32,
+    /// Base font size in logical pixels.
+    #[serde(default = "default_font_size")]
+    pub font_size: f32,
+    /// Name of the installed font to use (empty string = egui built-in default).
+    #[serde(default)]
+    pub font_name: String,
 }
 
 fn default_ui_scale() -> f32 {
@@ -36,6 +43,10 @@ fn default_ui_scale() -> f32 {
 
 fn default_changes_panel_height() -> f32 {
     200.0
+}
+
+fn default_font_size() -> f32 {
+    14.0
 }
 
 impl Default for Settings {
@@ -47,6 +58,8 @@ impl Default for Settings {
             theme: Theme::Dark,
             ui_scale: 1.0,
             changes_panel_height: 200.0,
+            font_size: 14.0,
+            font_name: String::new(),
         }
     }
 }
@@ -108,7 +121,7 @@ impl Selection {
 
 // ── UI state that does not need persisting ─────────────────────────────────────
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct UiState {
     pub worktree_filter: String,
     pub collapsed_repos: std::collections::HashSet<usize>,
@@ -123,6 +136,32 @@ pub struct UiState {
     pub viewing_pending: bool,
     /// Commit id currently being viewed (None when viewing pending changes).
     pub selected_commit_id: Option<String>,
+    /// Cached list of (family name, representative file path) for fonts found on this system.
+    pub available_fonts: Vec<(String, std::path::PathBuf)>,
+    /// Search string for the font picker.
+    pub font_search: String,
+    /// When true, the font picker shows only likely-monospace families.
+    pub font_monospace_only: bool,
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        Self {
+            worktree_filter: String::new(),
+            collapsed_repos: std::collections::HashSet::new(),
+            commits: Vec::new(),
+            diff_hunks: Vec::new(),
+            show_add_dialog: false,
+            show_settings: false,
+            pending_scan_dir: None,
+            files_view: Vec::new(),
+            viewing_pending: false,
+            selected_commit_id: None,
+            available_fonts: Vec::new(),
+            font_search: String::new(),
+            font_monospace_only: true,
+        }
+    }
 }
 
 // ── Top-level app state ────────────────────────────────────────────────────────
