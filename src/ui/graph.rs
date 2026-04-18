@@ -1,8 +1,9 @@
 use crate::state::AppState;
-use egui::{Color32, Id, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos2};
+use egui::{Color32, Id, Pos2, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos2};
 
 const NODE_COLOR: Color32 = Color32::from_rgb(55, 138, 221);
 const LINE_COLOR: Color32 = Color32::from_rgb(80, 80, 80);
+const NODE_RADIUS: f32 = 5.5;
 
 pub enum GraphAction {
     SelectPending,
@@ -41,6 +42,9 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
         .show(ui, |ui| {
             ui.spacing_mut().item_spacing = Vec2::new(0.0, 4.0);
 
+            // Collect node centers during layout; draw connecting lines after all rows.
+            let mut node_centers: Vec<Pos2> = Vec::new();
+
             // ── Working Tree item (always first) ───────────────────────────────
             let wt_y = ui.cursor().min.y;
             let wt_x = ui.cursor().min.x;
@@ -52,29 +56,27 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                     ui.vertical(|ui| {
                         ui.add_space(6.0);
                         let (rect, _) = ui.allocate_exact_size(Vec2::new(12.0, 12.0), Sense::hover());
-                        let painter = ui.painter();
-                        painter.circle_stroke(rect.center(), 5.5, (2.0, NODE_COLOR));
-                        if commit_count > 0 {
-                            let line_start = rect.center_bottom();
-                            let line_end = line_start + Vec2::new(0.0, 10.0);
-                            painter.line_segment([line_start, line_end], (1.5, LINE_COLOR));
-                        }
+                        node_centers.push(rect.center());
+                        ui.painter().circle_stroke(rect.center(), NODE_RADIUS, (2.0, NODE_COLOR));
                     });
                     ui.add_space(8.0);
                     ui.vertical(|ui| {
                         ui.add_space(4.0);
                         let color = if pending_selected { sel_color } else { text_color };
                         ui.label(RichText::new("Working Tree").size(13.0).color(color));
-                        ui.push_id("wt_meta", |ui| { ui.horizontal(|ui| {
-                            let change_text = if pending_count == 0 {
-                                "clean".to_string()
-                            } else {
-                                format!("{pending_count} change{}", if pending_count == 1 { "" } else { "s" })
-                            };
-                            ui.label(RichText::new(change_text).size(12.0).color(
-                                if pending_count > 0 { Color32::from_rgb(217, 90, 48) } else { Color32::GRAY }
-                            ));
-                        }); });
+                        ui.push_id("wt_meta", |ui| {
+                            ui.horizontal(|ui| {
+                                ui.spacing_mut().item_spacing.x = 6.0;
+                                let change_text = if pending_count == 0 {
+                                    "clean".to_string()
+                                } else {
+                                    format!("{pending_count} change{}", if pending_count == 1 { "" } else { "s" })
+                                };
+                                ui.label(RichText::new(change_text).size(12.0).color(
+                                    if pending_count > 0 { Color32::from_rgb(217, 90, 48) } else { Color32::GRAY }
+                                ));
+                            });
+                        });
                         ui.add_space(6.0);
                     });
                 });
@@ -99,15 +101,11 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                         ui.vertical(|ui| {
                             ui.add_space(6.0);
                             let (rect, _) = ui.allocate_exact_size(Vec2::new(12.0, 12.0), Sense::hover());
+                            node_centers.push(rect.center());
                             let painter = ui.painter();
-                            painter.circle_filled(rect.center(), 5.5, NODE_COLOR);
+                            painter.circle_filled(rect.center(), NODE_RADIUS, NODE_COLOR);
                             if !commit.is_head {
-                                painter.circle_stroke(rect.center(), 5.5, (2.0, NODE_COLOR));
-                            }
-                            if i < commit_count - 1 {
-                                let line_start = rect.center_bottom();
-                                let line_end = line_start + Vec2::new(0.0, 10.0);
-                                painter.line_segment([line_start, line_end], (1.5, LINE_COLOR));
+                                painter.circle_stroke(rect.center(), NODE_RADIUS, (2.0, NODE_COLOR));
                             }
                         });
                         ui.add_space(8.0);
@@ -121,11 +119,15 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                                 commit.message.clone()
                             };
                             ui.label(RichText::new(&msg).size(13.0).color(msg_color));
-                            ui.push_id("meta", |ui| { ui.horizontal(|ui| {
-                                ui.label(RichText::new(&commit.short_id).size(12.0).monospace()
-                                    .color(branch_fg));
-                                ui.label(RichText::new(relative_time(&commit.time)).size(11.0).color(Color32::GRAY));
-                            }); });
+                            ui.push_id("meta", |ui| {
+                                ui.horizontal_wrapped(|ui| {
+                                    ui.spacing_mut().item_spacing.x = 6.0;
+                                    ui.label(RichText::new(&commit.short_id).size(12.0).monospace()
+                                        .color(branch_fg));
+                                    ui.label(RichText::new(&commit.author).size(11.0).color(Color32::GRAY));
+                                    ui.label(RichText::new(commit.time.format("%d/%m/%y\u{00A0}%H:%M").to_string()).size(11.0).color(Color32::GRAY));
+                                });
+                            });
                             for branch in &commit.branches {
                                 ui.label(RichText::new(branch).size(11.0)
                                     .color(branch_fg)
@@ -141,19 +143,20 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                     action = Some(GraphAction::SelectCommit(i));
                 }
             }
+
+            // Draw connecting lines between consecutive node centers, clear of the circles.
+            if node_centers.len() > 1 {
+                let painter = ui.painter();
+                for window in node_centers.windows(2) {
+                    let from = window[0] + Vec2::new(0.0, NODE_RADIUS);
+                    let to   = window[1] - Vec2::new(0.0, NODE_RADIUS);
+                    painter.line_segment([from, to], (1.5, LINE_COLOR));
+                }
+            }
+
+            // Dummy allocation ensures commit_count is referenced to suppress unused warning.
+            let _ = commit_count;
         });
 
     action
-}
-
-fn relative_time(dt: &chrono::DateTime<chrono::Local>) -> String {
-    let now = chrono::Local::now();
-    let secs = (now - *dt).num_seconds();
-    match secs {
-        s if s < 60 => "just now".to_string(),
-        s if s < 3600 => format!("{}m ago", s / 60),
-        s if s < 86400 => format!("{}h ago", s / 3600),
-        s if s < 86400 * 7 => format!("{}d ago", s / 86400),
-        _ => dt.format("%b %d").to_string(),
-    }
 }
