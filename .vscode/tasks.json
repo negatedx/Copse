@@ -5,10 +5,9 @@
       "label": "cargo build",
       "type": "process",
       "command": "cargo",
-      "args": ["build"],
+      "args": ["build", "--target", "x86_64-pc-windows-gnu"],
       "options": {
         "cwd": "${workspaceFolder}/src",
-        "env": { "PATH": "C:\\msys64\\mingw64\\bin;${env:PATH}" }
       },
       "group": "build",
       "problemMatcher": ["$rustc"],

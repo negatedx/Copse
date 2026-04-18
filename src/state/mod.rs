@@ -2,6 +2,14 @@ use crate::git::{CommitInfo, DiffHunk, FileChange, RepoInfo, WorktreeInfo};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Default)]
+pub enum Theme {
+    #[default]
+    Dark,
+    Light,
+    System,
+}
+
 /// Persisted settings saved to disk between sessions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
@@ -11,6 +19,16 @@ pub struct Settings {
     pub scan_dirs: Vec<PathBuf>,
     /// How many commits to load in the history panel.
     pub history_limit: usize,
+    /// UI colour theme.
+    #[serde(default)]
+    pub theme: Theme,
+    /// UI scale multiplier applied on top of the system DPI (1.0 = native).
+    #[serde(default = "default_ui_scale")]
+    pub ui_scale: f32,
+}
+
+fn default_ui_scale() -> f32 {
+    1.0
 }
 
 impl Default for Settings {
@@ -19,6 +37,8 @@ impl Default for Settings {
             repo_paths: Vec::new(),
             scan_dirs: Vec::new(),
             history_limit: 100,
+            theme: Theme::Dark,
+            ui_scale: 1.0,
         }
     }
 }
@@ -82,18 +102,19 @@ impl Selection {
 
 #[derive(Debug, Default)]
 pub struct UiState {
-    /// Live search text in the sidebar.
     pub worktree_filter: String,
-    /// Which repos are collapsed in the sidebar.
     pub collapsed_repos: std::collections::HashSet<usize>,
-    /// Cached commit list for the currently selected worktree.
     pub commits: Vec<CommitInfo>,
-    /// Cached diff hunks for the currently selected file.
     pub diff_hunks: Vec<DiffHunk>,
-    /// Whether the "add repos" dialog is open.
     pub show_add_dialog: bool,
-    /// Path text field in the add dialog.
-    pub add_path_input: String,
+    pub show_settings: bool,
+    pub pending_scan_dir: Option<PathBuf>,
+    /// Files shown in the CHANGES panel (pending or from a selected commit).
+    pub files_view: Vec<FileChange>,
+    /// True when showing working-tree pending changes; false when showing a commit.
+    pub viewing_pending: bool,
+    /// Commit id currently being viewed (None when viewing pending changes).
+    pub selected_commit_id: Option<String>,
 }
 
 // ── Top-level app state ────────────────────────────────────────────────────────
@@ -132,10 +153,7 @@ impl AppState {
     }
 
     pub fn selected_file(&self) -> Option<&FileChange> {
-        let wt = self.selected_worktree()?;
-        self.selection
-            .file_idx
-            .and_then(|i| wt.pending_changes.get(i))
+        self.selection.file_idx.and_then(|i| self.ui.files_view.get(i))
     }
 
     // ── Filtering ──────────────────────────────────────────────────────────────

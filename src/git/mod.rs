@@ -281,7 +281,93 @@ pub fn get_commits(repo_path: &Path, limit: usize) -> Result<Vec<CommitInfo>> {
     Ok(commits)
 }
 
-// ── File diff ─────────────────────────────────────────────────────────────────
+// ── Commit files + diff ───────────────────────────────────────────────────────
+
+pub fn get_commit_files(repo_path: &Path, commit_id: &str) -> Result<Vec<FileChange>> {
+    let repo = Repository::open(repo_path)?;
+    let oid = git2::Oid::from_str(commit_id)?;
+    let commit = repo.find_commit(oid)?;
+    let tree = commit.tree()?;
+    let parent_tree = commit.parent(0).ok().and_then(|p| p.tree().ok());
+
+    let diff = repo.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)?;
+
+    let mut changes = Vec::new();
+    for delta in diff.deltas() {
+        let path = delta
+            .new_file()
+            .path()
+            .or_else(|| delta.old_file().path())
+            .map(PathBuf::from)
+            .unwrap_or_default();
+        let status = match delta.status() {
+            Delta::Added => ChangeStatus::Added,
+            Delta::Deleted => ChangeStatus::Deleted,
+            Delta::Renamed => ChangeStatus::Renamed,
+            Delta::Conflicted => ChangeStatus::Conflicted,
+            _ => ChangeStatus::Modified,
+        };
+        changes.push(FileChange { path, status });
+    }
+    changes.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(changes)
+}
+
+pub fn get_commit_file_diff(
+    repo_path: &Path,
+    commit_id: &str,
+    file_path: &Path,
+) -> Result<Vec<DiffHunk>> {
+    let repo = Repository::open(repo_path)?;
+    let oid = git2::Oid::from_str(commit_id)?;
+    let commit = repo.find_commit(oid)?;
+    let tree = commit.tree()?;
+    let parent_tree = commit.parent(0).ok().and_then(|p| p.tree().ok());
+
+    let mut opts = DiffOptions::new();
+    opts.pathspec(file_path);
+    opts.context_lines(3);
+
+    let diff = repo.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), Some(&mut opts))?;
+    let hunks: RefCell<Vec<DiffHunk>> = RefCell::new(Vec::new());
+
+    diff.foreach(
+        &mut |_, _| true,
+        None,
+        Some(&mut |_, hunk| {
+            let header = std::str::from_utf8(hunk.header()).unwrap_or("").trim().to_string();
+            hunks.borrow_mut().push(DiffHunk { header, lines: vec![] });
+            true
+        }),
+        Some(&mut |_, hunk, line| {
+            if let Some(hunk) = hunk {
+                let header = std::str::from_utf8(hunk.header()).unwrap_or("").trim().to_string();
+                let kind = match line.origin() {
+                    '+' => DiffLineKind::Added,
+                    '-' => DiffLineKind::Deleted,
+                    _ => DiffLineKind::Context,
+                };
+                let content = std::str::from_utf8(line.content())
+                    .unwrap_or("")
+                    .trim_end_matches('\n')
+                    .to_string();
+                if let Some(h) = hunks.borrow_mut().iter_mut().rev().find(|h| h.header == header) {
+                    h.lines.push(DiffLine {
+                        kind,
+                        old_lineno: line.old_lineno(),
+                        new_lineno: line.new_lineno(),
+                        content,
+                    });
+                }
+            }
+            true
+        }),
+    )?;
+
+    Ok(hunks.into_inner())
+}
+
+// ── File diff (working tree) ───────────────────────────────────────────────────
 
 pub fn get_file_diff(repo_path: &Path, file_path: &Path) -> Result<Vec<DiffHunk>> {
     let repo = Repository::open(repo_path)?;

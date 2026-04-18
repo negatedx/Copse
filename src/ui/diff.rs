@@ -61,41 +61,41 @@ pub fn show(ui: &mut Ui, state: &AppState) {
         .show(ui, |ui| {
             ui.spacing_mut().item_spacing = egui::Vec2::new(0.0, 0.0);
 
-            for hunk in &state.ui.diff_hunks {
-                // Hunk header
-                ui.label(
-                    RichText::new(&hunk.header)
-                        .size(10.0)
-                        .monospace()
-                        .color(HUNK_FG),
-                );
+            for (hunk_i, hunk) in state.ui.diff_hunks.iter().enumerate() {
+                ui.push_id(hunk_i, |ui| {
+                    ui.label(
+                        RichText::new(&hunk.header)
+                            .size(10.0)
+                            .monospace()
+                            .color(HUNK_FG),
+                    );
 
-                for line in &hunk.lines {
-                    let (bg, fg, prefix) = match line.kind {
-                        DiffLineKind::Added => (ADD_BG, ADD_FG, "+"),
-                        DiffLineKind::Deleted => (DEL_BG, DEL_FG, "-"),
-                        DiffLineKind::Context => (Color32::TRANSPARENT, CTX_FG, " "),
-                    };
+                    for (line_i, line) in hunk.lines.iter().enumerate() {
+                        let (bg, fg, prefix) = match line.kind {
+                            DiffLineKind::Added => (ADD_BG, ADD_FG, "+"),
+                            DiffLineKind::Deleted => (DEL_BG, DEL_FG, "-"),
+                            DiffLineKind::Context => (Color32::TRANSPARENT, CTX_FG, " "),
+                        };
 
-                    egui::Frame::none().fill(bg).show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            // Line number gutter
-                            let ln = line
-                                .new_lineno
-                                .or(line.old_lineno)
-                                .map(|n| format!("{n:>4}"))
-                                .unwrap_or_else(|| "    ".to_string());
-                            ui.label(
-                                RichText::new(&ln).size(10.0).monospace().color(LN_FG),
-                            );
-                            ui.add_space(4.0);
-
-                            // Prefix + content
-                            let text = format!("{prefix}{}", line.content);
-                            ui.label(RichText::new(&text).size(11.0).monospace().color(fg));
+                        ui.push_id(line_i, |ui| {
+                            egui::Frame::none().fill(bg).show(ui, |ui| {
+                                ui.horizontal(|ui| {
+                                    let ln = line
+                                        .new_lineno
+                                        .or(line.old_lineno)
+                                        .map(|n| format!("{n:>4}"))
+                                        .unwrap_or_else(|| "    ".to_string());
+                                    ui.label(
+                                        RichText::new(&ln).size(10.0).monospace().color(LN_FG),
+                                    );
+                                    ui.add_space(4.0);
+                                    let text = format!("{prefix}{}", line.content);
+                                    ui.label(RichText::new(&text).size(11.0).monospace().color(fg));
+                                });
+                            });
                         });
-                    });
-                }
+                    }
+                });
             }
         });
 }
