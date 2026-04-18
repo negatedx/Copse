@@ -144,6 +144,9 @@ pub struct UiState {
     pub font_monospace_only: bool,
     /// Repos that failed to open due to a git safe.directory ownership check.
     pub unsafe_repo_paths: Vec<PathBuf>,
+    /// In-progress value while the UI scale slider is being dragged.
+    /// Only written to settings on drag_stopped() to prevent layout thrash.
+    pub pending_ui_scale: Option<f32>,
 }
 
 impl Default for UiState {
@@ -163,6 +166,7 @@ impl Default for UiState {
             font_search: String::new(),
             font_monospace_only: true,
             unsafe_repo_paths: Vec::new(),
+            pending_ui_scale: None,
         }
     }
 }

@@ -37,6 +37,7 @@ walkdir = "2"
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+egui-phosphor = { version = "0.6", features = ["regular"] }
 
 [profile.release]
 opt-level = 3

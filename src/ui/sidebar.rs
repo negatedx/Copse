@@ -1,5 +1,6 @@
 use crate::state::{AppState, Selection};
-use egui::{Color32, Id, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos2};
+use egui::{Color32, Id, Rect, RichText, ScrollArea, Sense, TextEdit, Ui, Vec2, pos2};
+use egui_phosphor::regular as ph;
 
 pub enum SidebarAction {
     Select(Selection),
@@ -15,16 +16,25 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
     ui.horizontal(|ui| {
         ui.label(RichText::new("REPOS").size(10.0).color(Color32::GRAY));
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if ui.add(egui::Label::new(
-                RichText::new("⚙").size(14.0).color(Color32::GRAY)
+            let gear_resp = ui.add(egui::Label::new(
+                RichText::new(ph::GEAR_SIX).size(14.0).color(Color32::GRAY)
             ).sense(Sense::click()))
-                .on_hover_text("Settings")
-                .clicked()
-            {
+                .on_hover_text("Settings");
+            if gear_resp.hovered() {
+                ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+            }
+            if gear_resp.clicked() {
                 state.ui.show_settings = !state.ui.show_settings;
             }
             ui.add_space(4.0);
-            if ui.small_button("+").on_hover_text("Add repository").clicked() {
+            let add_resp = ui.add(egui::Label::new(
+                RichText::new(ph::PLUS).size(14.0).color(Color32::GRAY)
+            ).sense(Sense::click()))
+                .on_hover_text("Add repository");
+            if add_resp.hovered() {
+                ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+            }
+            if add_resp.clicked() {
                 state.ui.show_add_dialog = true;
             }
         });
@@ -34,9 +44,12 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
 
     // ── Search box ─────────────────────────────────────────────────────────────
     ui.horizontal(|ui| {
-        ui.label(RichText::new("⌕").size(14.0).color(Color32::GRAY));
-        ui.text_edit_singleline(&mut state.ui.worktree_filter)
-            .on_hover_text("Filter worktrees by name or branch");
+        ui.label(RichText::new(ph::MAGNIFYING_GLASS).size(14.0).color(Color32::GRAY));
+        ui.add(
+            TextEdit::singleline(&mut state.ui.worktree_filter)
+                .hint_text("Filter repos…")
+                .desired_width(f32::INFINITY),
+        );
     });
 
     ui.add_space(6.0);
@@ -63,7 +76,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                 let main_wt_idx = repo.worktrees.iter().position(|w| w.is_main).unwrap_or(0);
                 let repo_selected = state.selection.repo_idx == Some(repo_idx)
                     && state.selection.worktree_idx == Some(main_wt_idx);
-                let chevron = if is_collapsed && !force_expand { "▶" } else { "▼" };
+                let chevron = if is_collapsed && !force_expand { ph::CARET_RIGHT } else { ph::CARET_DOWN };
 
                 // ── Repo row ───────────────────────────────────────────────────
                 let row_y = ui.cursor().min.y;
@@ -76,9 +89,13 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                 ui.push_id(("repo", repo_idx), |ui| {
                     ui.horizontal(|ui| {
                         ui.add_space(6.0);
-                        if ui.add(egui::Label::new(
+                        let chevron_resp = ui.add(egui::Label::new(
                             RichText::new(chevron).size(11.0).color(Color32::GRAY)
-                        ).sense(Sense::click())).clicked() {
+                        ).sense(Sense::click()));
+                        if chevron_resp.hovered() {
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        }
+                        if chevron_resp.clicked() {
                             if is_collapsed {
                                 state.ui.collapsed_repos.remove(&repo_idx);
                             } else {
@@ -92,7 +109,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.add_space(4.0);
                             let remove_resp = ui.add(egui::Label::new(
-                                RichText::new("×").size(14.0).color(Color32::DARK_GRAY)
+                                RichText::new(ph::X).size(14.0).color(Color32::DARK_GRAY)
                             ).sense(Sense::click()))
                                 .on_hover_text("Remove repository");
                             if remove_resp.hovered() {
@@ -103,7 +120,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                             }
                             ui.label(RichText::new(format!("{linked_count}")).size(12.0).color(Color32::DARK_GRAY));
                             if total_changes > 0 {
-                                ui.label(RichText::new("●").size(8.0).color(Color32::from_rgb(217, 90, 48)));
+                                ui.label(RichText::new("●").size(12.0).color(Color32::from_rgb(217, 90, 48)));
                             }
                         });
                     });
@@ -183,7 +200,11 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                             ui.painter().set(wt_bg_idx, egui::Shape::rect_filled(wt_rect, 0.0, bg_fill));
                             ui.painter().vline(wt_x, wt_y..=wt_rect.max.y, egui::Stroke::new(3.0, sel_color));
                         }
-                        if ui.interact(wt_rect, Id::new(("wt_click", repo_idx, wt_idx)), Sense::click()).clicked() {
+                        let wt_resp = ui.interact(wt_rect, Id::new(("wt_click", repo_idx, wt_idx)), Sense::click());
+                        if wt_resp.hovered() {
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                        }
+                        if wt_resp.clicked() {
                             action = Some(SidebarAction::Select(Selection::worktree(repo_idx, wt_idx)));
                         }
                     }

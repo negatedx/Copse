@@ -1,5 +1,6 @@
 use crate::state::{AppState, Theme};
 use egui::{Color32, Context, RichText, ScrollArea, Slider, TextEdit};
+use egui_phosphor::regular as ph;
 use std::path::PathBuf;
 
 pub fn show(ctx: &Context, state: &mut AppState, system_ppp: f32) {
@@ -41,14 +42,15 @@ pub fn show(ctx: &Context, state: &mut AppState, system_ppp: f32) {
             // ── UI Scale ───────────────────────────────────────────────────────
             ui.label(RichText::new("UI Scale").size(11.0).color(Color32::GRAY));
             ui.add_space(4.0);
-            let mut scale = state.settings.ui_scale;
-            if ui
-                .add(Slider::new(&mut scale, 0.75f32..=2.0).step_by(0.05).suffix("×"))
-                .changed()
-            {
+            let mut scale = state.ui.pending_ui_scale.unwrap_or(state.settings.ui_scale);
+            let scale_resp = ui.add(Slider::new(&mut scale, 0.75f32..=2.0).step_by(0.05).suffix("×"));
+            if scale_resp.dragged() {
+                state.ui.pending_ui_scale = Some(scale);
+            } else if scale_resp.drag_stopped() || (!scale_resp.dragged() && scale_resp.changed()) {
                 state.settings.ui_scale = scale;
                 state.settings.save();
                 ctx.set_pixels_per_point(system_ppp * scale);
+                state.ui.pending_ui_scale = None;
             }
             ui.add_space(4.0);
             if ui.small_button("Reset to default").clicked() {
@@ -97,7 +99,7 @@ pub fn show(ctx: &Context, state: &mut AppState, system_ppp: f32) {
                 let color = visuals.fg_stroke.color;
                 let font_id = egui::TextStyle::Button.resolve(ui.style());
                 let arrow_galley = ui.fonts(|f| {
-                    f.layout_no_wrap("▾".to_owned(), font_id.clone(), color)
+                    f.layout_no_wrap(ph::CARET_DOWN.to_owned(), font_id.clone(), color)
                 });
                 let arrow_x = rect.right() - arrow_galley.size().x - 6.0;
                 let text_galley = ui.fonts(|f| {

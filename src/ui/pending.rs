@@ -2,7 +2,7 @@ use crate::{
     git::ChangeStatus,
     state::AppState,
 };
-use egui::{Color32, Id, Layout, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos2};
+use egui::{Color32, Id, Rect, RichText, ScrollArea, Sense, Ui, Vec2, pos2};
 
 /// Renders the pending changes section. Returns the selected file index if clicked.
 pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
@@ -30,21 +30,25 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
 
     ui.add_space(2.0);
 
-    // Allocate a fixed-height rect so the divider below never moves regardless
-    // of how many files are in the list.
-    let avail_w = ui.available_width();
-    let (fixed_rect, _) = ui.allocate_exact_size(Vec2::new(avail_w, panel_h), Sense::hover());
-    let mut child = ui.child_ui(fixed_rect, Layout::top_down(egui::Align::LEFT), None);
-
     if changes.is_empty() {
-        child.add_space(6.0);
-        child.label(RichText::new("  no changes").size(11.0).color(Color32::GRAY));
+        // Reserve the same fixed height so the divider below stays stable.
+        let avail_w = ui.available_width();
+        let (fixed_rect, _) = ui.allocate_exact_size(Vec2::new(avail_w, panel_h), Sense::hover());
+        ui.painter().text(
+            fixed_rect.left_top() + egui::vec2(8.0, 6.0),
+            egui::Align2::LEFT_TOP,
+            "no changes",
+            egui::TextStyle::Small.resolve(ui.style()),
+            Color32::GRAY,
+        );
     } else {
         ScrollArea::vertical()
             .id_source("pending_scroll")
             .max_height(panel_h)
-            .show(&mut child, |ui| {
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(0.0, 2.0);
+                ui.set_min_height(panel_h);
 
                 for (i, change) in changes.iter().enumerate() {
                     let is_sel = state.selection.file_idx == Some(i);

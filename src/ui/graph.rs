@@ -41,6 +41,7 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
 
     ScrollArea::vertical()
         .id_source("graph_scroll")
+        .auto_shrink([false, false])
         .show(ui, |ui| {
             ui.spacing_mut().item_spacing = Vec2::new(0.0, 4.0);
 
@@ -92,7 +93,11 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                 ui.painter().set(wt_bg_idx, egui::Shape::rect_filled(wt_rect, 0.0, bg_fill));
                 ui.painter().vline(wt_x, wt_y..=wt_rect.max.y, egui::Stroke::new(3.0, sel_color));
             }
-            if ui.interact(wt_rect, Id::new("graph_wt_click"), Sense::click()).clicked() {
+            let wt_resp = ui.interact(wt_rect, Id::new("graph_wt_click"), Sense::click());
+            if wt_resp.hovered() {
+                ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+            }
+            if wt_resp.clicked() {
                 action = Some(GraphAction::SelectPending);
             }
 
@@ -167,7 +172,11 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
                     ui.painter().set(row_bg_idx, egui::Shape::rect_filled(row_rect, 0.0, bg_fill));
                     ui.painter().vline(row_x, row_y..=row_rect.max.y, egui::Stroke::new(3.0, sel_color));
                 }
-                if ui.interact(row_rect, Id::new(("graph_commit_click", i)), Sense::click()).clicked() {
+                let commit_resp = ui.interact(row_rect, Id::new(("graph_commit_click", i)), Sense::click());
+                if commit_resp.hovered() {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+                if commit_resp.clicked() {
                     action = Some(GraphAction::SelectCommit(i));
                 }
             }

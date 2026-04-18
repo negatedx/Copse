@@ -33,6 +33,8 @@ fn apply_font_size(ctx: &Context, font_size: f32) {
 
 fn load_font(ctx: &Context, font_name: &str, available_fonts: &[(String, std::path::PathBuf)]) {
     let mut fonts = egui::FontDefinitions::default();
+    // Always include Phosphor icons as a fallback in the proportional family.
+    egui_phosphor::add_to_fonts(&mut fonts, egui_phosphor::Variant::Regular);
     if !font_name.is_empty() {
         if let Some((_, path)) = available_fonts.iter().find(|(n, _)| n == font_name) {
             if let Ok(data) = std::fs::read(path) {
