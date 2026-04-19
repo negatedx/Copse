@@ -311,7 +311,7 @@ fn hunk_header(ui: &mut Ui, header: &str, word_wrap: bool, c: &Colors) {
     ui.horizontal(|ui| {
         ui.add_space(6.0);
         if !word_wrap {
-            ui.style_mut().wrap = Some(false);
+            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
         }
         let lbl = egui::Label::new(RichText::new(header).size(10.0).monospace().color(c.hunk_fg));
         ui.add(if word_wrap { lbl.wrap() } else { lbl });

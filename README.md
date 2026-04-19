@@ -24,7 +24,7 @@ _Screenshots coming soon._
 ## Features
 
 - **Multi-repo sidebar** — all your repos in one tree view, with per-worktree change counts
-- **Multi-worktree support** — all registered worktrees shown per repo, not just the main branch
+- **Multi-worktree support** — all registered worktrees shown per repo, not just the main branch6
 - **Worktree search** — filter across all repos by name or branch prefix
 - **Pending changes panel** — modified/added/deleted/untracked files with status badges
 - **Commit graph** — linear history with branch name pills and relative timestamps

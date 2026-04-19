@@ -95,17 +95,33 @@
 
 ---
 
-## Fix all compiler warnings
+## Add Linux release build and CI job
+
+**Priority:** Medium
+
+**Problem:** GitRove only builds and ships a Windows binary. Linux is a common platform for developers who would use this tool alongside Claude Code.
+
+**Acceptance criteria:**
+- App builds and runs on Ubuntu (latest LTS) without errors
+- Release workflow produces a Linux x86_64 binary and attaches it to the GitHub Release
+- README installation section covers Linux prerequisites and build instructions
+
+**Notes:** eframe requires `libgtk-3-dev`, `libxcb-*`, and related packages on Linux. Add a `build-linux` job to `release.yml` running on `ubuntu-latest` alongside the existing Windows job. No `rust-toolchain.toml` target changes needed — default GNU toolchain works on Linux.
+
+---
+
+## Add macOS release build and CI job
 
 **Priority:** Low
 
-**Problem:** `cargo build` emits 7 warnings every build — unused imports (`WalkDir`, `all_watch_paths`, `spawn_watcher`) and dead code (`is_clean`, `Selection::repo`, `spawn_watcher`, `run_watcher`, `all_watch_paths` in watcher). These mask real new warnings that may appear in future.
+**Problem:** GitRove has no macOS build. eframe supports macOS but the release pipeline is Windows-only.
 
 **Acceptance criteria:**
-- `cargo build` produces zero warnings
-- Dead code is either removed or, if intentionally kept for future use, suppressed with `#[allow(dead_code)]` and a comment explaining why
+- App builds and runs on macOS (Apple Silicon and/or Intel)
+- Release workflow produces a macOS binary attached to the GitHub Release
+- README covers macOS installation
 
-**Notes:** Warnings are in `src/git/mod.rs` (unused `walkdir`), `src/ui/mod.rs` (unused watcher imports), `src/state/mod.rs` (`Selection::repo`), `src/watcher/mod.rs` (entire public API unused). The watcher module may be intentionally scaffolded for future use — check before deleting.
+**Notes:** eframe supports macOS natively. A plain binary works for dev use; a signed `.app` bundle is needed for broader distribution but can come later. Consider a universal binary (`aarch64` + `x86_64`) or separate artifacts. Add a `build-macos` job to `release.yml` on `macos-latest`.
 
 ---
 

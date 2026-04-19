@@ -7,8 +7,7 @@ use std::{
 };
 use tracing::{info, warn};
 
-/// Spawn a background thread that watches all provided paths for changes.
-/// Returns a channel receiver that yields the changed path on each event.
+#[allow(dead_code)]
 pub fn spawn_watcher(paths: Vec<PathBuf>) -> Result<mpsc::Receiver<PathBuf>> {
     let (tx, rx) = mpsc::channel::<PathBuf>();
 
@@ -55,8 +54,7 @@ fn run_watcher(paths: Vec<PathBuf>, tx: Sender<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// Add a new path to an existing watcher by restarting it with the updated list.
-/// In practice, call `spawn_watcher` again with all paths after adding a repo.
+#[allow(dead_code)]
 pub fn all_watch_paths(repos: &[crate::git::RepoInfo]) -> Vec<PathBuf> {
     repos
         .iter()

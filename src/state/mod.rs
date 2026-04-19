@@ -111,13 +111,6 @@ pub struct Selection {
 }
 
 impl Selection {
-    pub fn repo(idx: usize) -> Self {
-        Self {
-            repo_idx: Some(idx),
-            ..Default::default()
-        }
-    }
-
     pub fn worktree(repo: usize, wt: usize) -> Self {
         Self {
             repo_idx: Some(repo),
@@ -155,10 +148,6 @@ pub struct UiState {
     /// In-progress value while the UI scale slider is being dragged.
     /// Only written to settings on drag_stopped() to prevent layout thrash.
     pub pending_ui_scale: Option<f32>,
-    /// Horizontal scroll offset shared between the two split-view columns.
-    pub split_h_scroll: f32,
-    /// Vertical scroll offset shared between the two split-view columns.
-    pub split_v_scroll: f32,
     /// Tag name of an available update, populated once by the background check.
     pub update_available: Option<String>,
     /// True once the user has dismissed the update banner for this session.
@@ -183,8 +172,7 @@ impl Default for UiState {
             font_monospace_only: true,
             unsafe_repo_paths: Vec::new(),
             pending_ui_scale: None,
-            split_h_scroll: 0.0,
-            split_v_scroll: 0.0,
+
             update_available: None,
             update_dismissed: false,
         }

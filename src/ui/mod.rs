@@ -10,7 +10,7 @@ use crate::{
         get_commits, get_file_content_as_diff, get_file_diff, load_repos_parallel, ChangeStatus,
     },
     state::{AppState, Selection, Theme},
-    watcher::{all_watch_paths, spawn_watcher},
+
 };
 use eframe::CreationContext;
 use egui::{CentralPanel, Context, FontId, SidePanel, TextStyle, Visuals};

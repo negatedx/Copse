@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 // ── Data types ────────────────────────────────────────────────────────────────
 
@@ -32,9 +31,7 @@ impl WorktreeInfo {
         self.pending_changes.len()
     }
 
-    pub fn is_clean(&self) -> bool {
-        self.pending_changes.is_empty()
-    }
+
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
