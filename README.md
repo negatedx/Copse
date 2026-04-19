@@ -1,80 +1,93 @@
-# gitwatcher
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/icon-dark.png">
+  <img alt="gitrove" src="assets/icon-light.png" width="64">
+</picture>
 
-A fast, read-only Git GUI designed for developers working across multiple repos and worktrees simultaneously. Built with Rust and [egui](https://github.com/emilk/egui).
+# gitrove
+
+A fast, read-only Git GUI for developers working across multiple repos and worktrees simultaneously. Built with Rust and [egui](https://github.com/emilk/egui).
 
 ## Why
 
-When using Claude Code to drive development across multiple microservices, you often have several worktrees open at once — one per feature or fix, spread across several repos. Standard Git GUIs either show one repo at a time, or are too heavyweight to keep open alongside everything else. gitwatcher keeps the full picture visible at a glance.
+When using Claude Code to drive development across multiple microservices, you often have several worktrees open at once — one per feature or fix, spread across several repos. Standard Git GUIs either show one repo at a time, or are too heavyweight to keep open alongside everything else. gitrove keeps the full picture visible at a glance.
+
+## Screenshots
+
+_Screenshots coming soon._
+
+<!-- 
+  To add screenshots: place PNG files in assets/screenshots/ and reference them below, e.g.:
+  ![Main view](assets/screenshots/main.png)
+-->
 
 ## Features
 
 - **Multi-repo sidebar** — all your repos in one tree view, with per-worktree change counts
 - **Multi-worktree support** — all registered worktrees shown per repo, not just the main branch
-- **Worktree search** — filter across all repos by name or branch prefix; useful when you use consistent naming across microservices (e.g. `feat/auth-refresh` in api-gateway, user-service, etc.)
-- **Pending changes panel** — always visible at the top of the middle column, showing modified/added/deleted/untracked files
-- **Commit graph** — linear history with relative timestamps, below the pending changes
-- **Diff view** — unified diff for the selected file with line numbers and syntax highlighting
-- **Auto-refresh** — file watcher detects changes made by Claude Code or any other tool and updates the view automatically
-- **"Add all repos in dir"** — point at your microservices parent directory and all repos are discovered at once
+- **Worktree search** — filter across all repos by name or branch prefix
+- **Pending changes panel** — modified/added/deleted/untracked files with status badges
+- **Commit graph** — linear history with branch name pills and relative timestamps
+- **Diff view** — unified or side-by-side diff with line numbers and optional word wrap
+- **Auto-refresh** — file watcher detects changes and updates the view automatically
+- **"Add all repos in dir"** — point at your microservices root and all repos are discovered at once
+- **Update notifications** — notified in-app when a new release is available
 
-## What it does not do (by design)
+## What it does not do yet
 
-gitwatcher is intentionally read-only in v1. It does not stage, commit, push, or create branches. Claude Code handles that. This tool is purely for visibility.
+gitrove is read-only in v1 — it does not stage, commit, push, or create branches. Fuller Git workflow support is planned for future releases. For now, Claude Code handles the writes.
 
 ## Installation
 
-### Prerequisites
+### Download
 
-- Rust 1.78+ (`rustup` recommended)
-- On Linux: `libgtk-3-dev`, `libxcb-*` packages for egui windowing
+Pre-built Windows binaries are available on the [Releases](https://github.com/negatedx/GitRove/releases) page.
 
-### Build
+### Build from source
+
+**Prerequisites:** Rust 1.78+ (via [rustup](https://rustup.rs))
 
 ```bash
-git clone <this repo>
-cd gitwatcher
+git clone https://github.com/negatedx/GitRove.git
+cd GitRove/src
 cargo build --release
-./target/release/gitwatcher
-```
-
-### Install to PATH
-
-```bash
-cargo install --path .
-gitwatcher
+./target/release/gitrove.exe
 ```
 
 ## Usage
 
 ### Adding repos
 
-On first launch the window will be empty. Click **+** in the sidebar header to open the add dialog:
+On first launch the window will be empty. Click **+** in the sidebar header to open the file picker:
 
-- **Add single repo** — paste an absolute path to any git repo
-- **Add all repos in dir** — paste the path to a parent directory; all immediate subdirectories containing a `.git` folder are added
+- **Select a git repo directly** — pick the repo root folder
+- **Select a parent directory** — gitrove scans all subdirectories and adds every repo it finds
 
-Repo paths are saved to `~/.config/gitwatcher/settings.json` and restored on next launch.
+Repo paths are saved to `%APPDATA%\gitrove\settings.json` and restored on next launch.
 
 ### Worktree search
 
-Type in the search box at the top of the sidebar. The tree filters live as you type, matching against worktree names and branch names. Matched worktrees are highlighted in blue; repos with no matches are hidden. Clear the search to restore the full tree.
+Type in the search box at the top of the sidebar. The tree filters live as you type, matching against worktree names and branch names. Matched worktrees are highlighted; repos with no matches are hidden.
 
-Tip: if you use a consistent prefix like `feat/TICKET-123` across repos, typing that prefix instantly shows you all the related worktrees.
+Tip: if you use a consistent prefix like `feat/TICKET-123` across repos, typing that prefix instantly shows all related worktrees across every repo.
 
-### Keyboard shortcuts (planned)
+### Settings
 
-| Key | Action |
-|-----|--------|
-| `/` | Focus the worktree search |
-| `Esc` | Clear search |
-| `↑` / `↓` | Navigate commits |
-| `R` | Force refresh all repos |
+Click the gear icon in the sidebar header to open Settings. From there you can adjust:
+
+- **Theme** — Dark, Light, or follow the system setting
+- **UI scale** — zoom the entire interface up or down
+- **Font** — pick any installed monospace font; applied to diff and code views
+- **Font size** — independent of UI scale
+- **History limit** — how many commits to load per worktree
+- **Diff mode** — unified (default) or side-by-side
+- **Word wrap** — wrap long diff lines instead of scrolling horizontally
 
 ## Project layout
 
 ```
 src/
   main.rs          — entry point, logging setup
+  updater.rs       — background update check against GitHub releases API
   git/mod.rs       — repo discovery, worktree loading, diff, history (libgit2)
   state/mod.rs     — AppState, Settings, Selection, UiState
   watcher/mod.rs   — file system watcher (notify + debounce)
@@ -83,49 +96,38 @@ src/
     sidebar.rs     — repo/worktree tree + search
     pending.rs     — pending changes file list
     graph.rs       — commit history graph
-    diff.rs        — unified diff viewer
+    diff.rs        — unified and side-by-side diff viewer
+    settings.rs    — settings window
 ```
 
 ## Configuration
 
-Settings file: `~/.config/gitwatcher/settings.json`
+Settings file: `%APPDATA%\gitrove\settings.json`
 
 ```json
 {
-  "repo_paths": ["/home/user/projects/my-repo"],
-  "scan_dirs": ["/home/user/projects"],
-  "history_limit": 100
+  "repo_paths": ["C:/Users/you/projects/my-repo"],
+  "history_limit": 100,
+  "theme": "Dark",
+  "ui_scale": 1.0,
+  "font_size": 14.0,
+  "diff_side_by_side": false,
+  "diff_word_wrap": false
 }
 ```
-
-## Performance notes
-
-- Repo scanning on startup is parallelised with `rayon` — 20 repos load in roughly the same time as one
-- The file watcher debounces events at 300ms to avoid thrashing on rapid saves
-- egui is an immediate-mode renderer; the UI only repaints when something changes
-- Memory usage is proportional to the number of repos and the history limit; `history_limit` in settings caps commit list size
 
 ## Dependencies
 
 | Crate | Purpose |
 |-------|---------|
 | `egui` / `eframe` | Immediate-mode UI framework |
+| `egui-phosphor` | Phosphor icon set for egui |
 | `git2` | libgit2 bindings — all Git operations |
-| `rayon` | Data parallelism for multi-repo scanning |
-| `tokio` | Async runtime (used by the watcher layer) |
+| `rayon` | Parallelism for multi-repo scanning |
 | `notify` + `notify-debouncer-mini` | Cross-platform file watching |
+| `reqwest` | Blocking HTTP for the update check |
 | `serde` / `serde_json` | Settings persistence |
-| `dirs` | XDG-compliant config paths |
+| `dirs` | Platform config directory paths |
 | `chrono` | Commit timestamp formatting |
 | `anyhow` | Error handling |
 | `tracing` | Structured logging |
-
-## Roadmap
-
-- [ ] Multi-lane commit graph (parallel branches)
-- [ ] Keyboard navigation throughout
-- [ ] File history (commits touching a specific file)
-- [ ] Word-level diff highlighting
-- [ ] Optional dark/light theme toggle
-- [ ] System tray / menubar mode
-- [ ] Configurable repo colours in the sidebar
