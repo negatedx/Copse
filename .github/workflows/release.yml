@@ -16,8 +16,6 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -31,12 +29,12 @@ jobs:
 
       - name: Build release binary
         working-directory: src
-        run: cargo build --release --target x86_64-pc-windows-msvc
+        run: cargo build --release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: src/target/x86_64-pc-windows-msvc/release/gitrove.exe
+          files: src/target/release/gitrove.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
