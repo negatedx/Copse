@@ -1,15 +1,16 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/icon-dark.png">
-  <img alt="gitrove" src="assets/icon-light.png" width="64">
-</picture>
-
-# gitrove
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/icon-dark.png">
+    <img alt="GitRove" src="assets/icon-light.png" width="48" valign="middle">
+  </picture>
+  GitRove
+</h1>
 
 A fast, read-only Git GUI for developers working across multiple repos and worktrees simultaneously. Built with Rust and [egui](https://github.com/emilk/egui).
 
 ## Why
 
-When using Claude Code to drive development across multiple microservices, you often have several worktrees open at once — one per feature or fix, spread across several repos. Standard Git GUIs either show one repo at a time, or are too heavyweight to keep open alongside everything else. gitrove keeps the full picture visible at a glance.
+When using Claude Code to drive development across multiple microservices, you often have several worktrees open at once — one per feature or fix, spread across several repos. Standard Git GUIs either show one repo at a time, or are too heavyweight to keep open alongside everything else. GitRove keeps the full picture visible at a glance.
 
 ## Screenshots
 
@@ -34,7 +35,7 @@ _Screenshots coming soon._
 
 ## What it does not do yet
 
-gitrove is read-only in v1 — it does not stage, commit, push, or create branches. Fuller Git workflow support is planned for future releases. For now, Claude Code handles the writes.
+GitRove is read-only in v1 — it does not stage, commit, push, or create branches. Fuller Git workflow support is planned for future releases. For now, Claude Code handles the writes.
 
 ## Installation
 
@@ -60,7 +61,7 @@ cargo build --release
 On first launch the window will be empty. Click **+** in the sidebar header to open the file picker:
 
 - **Select a git repo directly** — pick the repo root folder
-- **Select a parent directory** — gitrove scans all subdirectories and adds every repo it finds
+- **Select a parent directory** — GitRove scans all subdirectories and adds every repo it finds
 
 Repo paths are saved to `%APPDATA%\gitrove\settings.json` and restored on next launch.
 
