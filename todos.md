@@ -1,24 +1,4 @@
-# gitwatcher — Todo List
-
----
-
-## Rename the app and add an app icon
-
-**Priority:** High
-
-**Problem:** The name "gitwatcher" undersells what the app does — it's a multi-repo, multi-worktree dashboard, not a file watcher. The app also ships with no icon, which makes it feel unfinished and hard to identify in the taskbar or a shared release.
-
-**Acceptance criteria:**
-- A new name is chosen (e.g. "multigit") and applied consistently
-- `Cargo.toml` package name and binary name updated
-- Window title in `main.rs` updated
-- Config directory in `state/mod.rs` `settings_path()` updated to match the new name
-- `CLAUDE.md` updated throughout; no remaining hardcoded references to `gitwatcher`
-- An app icon (PNG, at least 256×256) is created or sourced and committed to `assets/`
-- The window/taskbar icon is set via `eframe::NativeOptions::icon_data` at launch
-- The `.exe` file icon is embedded for Windows using `winres` in `build.rs`
-
-**Notes:** The settings file lives at `{config_dir}/gitwatcher/settings.json` — renaming the config dir orphans existing settings. Either silently migrate the old path on first launch, or accept the one-time reset (re-add repos) given the app is pre-release. `winres` requires a `.ico` file; convert the PNG with ImageMagick or a similar tool before embedding.
+# gitrove — Todo List
 
 ---
 

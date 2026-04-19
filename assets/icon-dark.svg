@@ -1,0 +1,53 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="#1c2b1a"/>
+
+  <line x1="140" y1="980" x2="140" y2="80" stroke="#8b6f47" stroke-width="28" stroke-linecap="round"/>
+
+  <path d="M140,760 C140,714 246,692 246,646" fill="none" stroke="#7a9e6f" stroke-width="16" stroke-linecap="round"/>
+  <line x1="246" y1="646" x2="246" y2="80" stroke="#7a9e6f" stroke-width="16" stroke-linecap="round"/>
+
+  <path d="M140,550 C140,504 352,482 352,436" fill="none" stroke="#4e8b5f" stroke-width="16" stroke-linecap="round"/>
+  <line x1="352" y1="436" x2="352" y2="80" stroke="#4e8b5f" stroke-width="16" stroke-linecap="round"/>
+
+  <path d="M140,340 C140,294 458,272 458,226" fill="none" stroke="#a8c44e" stroke-width="16" stroke-linecap="round"/>
+  <line x1="458" y1="226" x2="458" y2="80" stroke="#a8c44e" stroke-width="16" stroke-linecap="round"/>
+
+  <circle cx="140" cy="920" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="140" cy="760" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="140" cy="550" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="140" cy="340" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="140" cy="160" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+
+  <circle cx="246" cy="400" r="20" fill="#1c2b1a" stroke="#7a9e6f" stroke-width="8"/>
+  <circle cx="246" cy="160" r="20" fill="#1c2b1a" stroke="#7a9e6f" stroke-width="8"/>
+
+  <circle cx="352" cy="300" r="20" fill="#1c2b1a" stroke="#4e8b5f" stroke-width="8"/>
+  <circle cx="352" cy="160" r="20" fill="#1c2b1a" stroke="#4e8b5f" stroke-width="8"/>
+
+  <circle cx="458" cy="160" r="20" fill="#1c2b1a" stroke="#a8c44e" stroke-width="8"/>
+
+  <line x1="884" y1="980" x2="884" y2="80" stroke="#8b6f47" stroke-width="28" stroke-linecap="round"/>
+
+  <path d="M884,780 C884,734 778,712 778,666" fill="none" stroke="#7a9e6f" stroke-width="16" stroke-linecap="round"/>
+  <line x1="778" y1="666" x2="778" y2="80" stroke="#7a9e6f" stroke-width="16" stroke-linecap="round"/>
+
+  <path d="M884,565 C884,519 672,497 672,451" fill="none" stroke="#4e8b5f" stroke-width="16" stroke-linecap="round"/>
+  <line x1="672" y1="451" x2="672" y2="80" stroke="#4e8b5f" stroke-width="16" stroke-linecap="round"/>
+
+  <path d="M884,355 C884,309 566,287 566,241" fill="none" stroke="#a8c44e" stroke-width="16" stroke-linecap="round"/>
+  <line x1="566" y1="241" x2="566" y2="80" stroke="#a8c44e" stroke-width="16" stroke-linecap="round"/>
+
+  <circle cx="884" cy="920" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="884" cy="780" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="884" cy="565" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="884" cy="355" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+  <circle cx="884" cy="160" r="24" fill="#1c2b1a" stroke="#8b6f47" stroke-width="10"/>
+
+  <circle cx="778" cy="420" r="20" fill="#1c2b1a" stroke="#7a9e6f" stroke-width="8"/>
+  <circle cx="778" cy="160" r="20" fill="#1c2b1a" stroke="#7a9e6f" stroke-width="8"/>
+
+  <circle cx="672" cy="315" r="20" fill="#1c2b1a" stroke="#4e8b5f" stroke-width="8"/>
+  <circle cx="672" cy="160" r="20" fill="#1c2b1a" stroke="#4e8b5f" stroke-width="8"/>
+
+  <circle cx="566" cy="160" r="20" fill="#1c2b1a" stroke="#a8c44e" stroke-width="8"/>
+</svg>

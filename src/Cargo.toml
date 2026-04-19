@@ -1,13 +1,14 @@
 [package]
-name = "gitwatcher"
+name = "gitrove"
 version = "0.1.0"
 edition = "2021"
-description = "Multi-repo, multi-worktree Git GUI focused on visibility"
+description = "Multi-repo, multi-worktree Git dashboard"
 authors = []
 license = "MIT"
+build = "build.rs"
 
 [[bin]]
-name = "gitwatcher"
+name = "gitrove"
 path = "main.rs"
 
 [dependencies]
@@ -38,6 +39,10 @@ chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 egui-phosphor = { version = "0.6", features = ["regular"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[build-dependencies]
+winres = "0.1"
 
 [profile.release]
 opt-level = 3

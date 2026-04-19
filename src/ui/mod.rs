@@ -55,12 +55,19 @@ pub struct App {
     state: AppState,
     system_dark: bool,
     system_ppp: f32,
-    /// Tracks which font is currently loaded so we only call set_fonts when it changes.
     loaded_font_name: String,
+    icon_dark: std::sync::Arc<egui::IconData>,
+    icon_light: std::sync::Arc<egui::IconData>,
+    /// Last effective dark/light state so we only push ViewportCommand::Icon on change.
+    last_icon_dark: Option<bool>,
 }
 
 impl App {
-    pub fn new(cc: &CreationContext) -> Self {
+    pub fn new(
+        cc: &CreationContext,
+        icon_dark: std::sync::Arc<egui::IconData>,
+        icon_light: std::sync::Arc<egui::IconData>,
+    ) -> Self {
         let system_dark = cc
             .integration_info
             .system_theme
@@ -115,7 +122,7 @@ impl App {
         load_font(&cc.egui_ctx, &loaded_font_name, &state.ui.available_fonts);
         apply_font_size(&cc.egui_ctx, state.settings.font_size);
 
-        Self { state, system_dark, system_ppp, loaded_font_name }
+        Self { state, system_dark, system_ppp, loaded_font_name, icon_dark, icon_light, last_icon_dark: None }
     }
 
     fn poll_watcher(&mut self) {
@@ -234,6 +241,17 @@ impl eframe::App for App {
             }
         };
         ctx.set_visuals(visuals);
+
+        let effective_dark = match self.state.settings.theme {
+            Theme::Dark => true,
+            Theme::Light => false,
+            Theme::System => self.system_dark,
+        };
+        if self.last_icon_dark != Some(effective_dark) {
+            let icon = if effective_dark { self.icon_dark.clone() } else { self.icon_light.clone() };
+            ctx.send_viewport_cmd(egui::ViewportCommand::Icon(Some(icon)));
+            self.last_icon_dark = Some(effective_dark);
+        }
 
         let desired_font = self.state.settings.font_name.clone();
         if desired_font != self.loaded_font_name {

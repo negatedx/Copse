@@ -5,10 +5,10 @@
       "type": "lldb-dap",
       "request": "launch",
       "name": "Debug",
-      "program": "${workspaceFolder}/src/target/x86_64-pc-windows-gnu/debug/gitwatcher.exe",
+      "program": "${workspaceFolder}/src/target/x86_64-pc-windows-gnu/debug/gitrove.exe",
       "args": [],
       "cwd": "${workspaceFolder}",
-      "env": { "RUST_LOG": "gitwatcher=debug" },
+      "env": { "RUST_LOG": "gitrove=debug" },
       "preLaunchTask": "cargo build",
       "initCommands": [
         "settings set symbols.enable-external-lookup false"
