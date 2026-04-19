@@ -98,7 +98,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
     clicked_idx
 }
 
-fn status_color(status: &ChangeStatus, dark: bool) -> Color32 {
+pub fn status_color(status: &ChangeStatus, dark: bool) -> Color32 {
     if dark {
         match status {
             ChangeStatus::Modified => Color32::from_rgb(55, 138, 221),

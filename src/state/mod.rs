@@ -126,6 +126,8 @@ impl Selection {
 pub struct UiState {
     pub worktree_filter: String,
     pub collapsed_repos: std::collections::HashSet<usize>,
+    /// Worktrees whose file children are currently expanded. Default is collapsed.
+    pub expanded_worktrees: std::collections::HashSet<(usize, usize)>,
     pub commits: Vec<CommitInfo>,
     pub diff_hunks: Vec<DiffHunk>,
     pub show_add_dialog: bool,
@@ -148,6 +150,9 @@ pub struct UiState {
     /// In-progress value while the UI scale slider is being dragged.
     /// Only written to settings on drag_stopped() to prevent layout thrash.
     pub pending_ui_scale: Option<f32>,
+    /// When true, the middle panel is hidden and the diff fills the full right area.
+    /// Set when a file is selected directly from the sidebar file list.
+    pub hide_middle_panel: bool,
 }
 
 impl Default for UiState {
@@ -155,6 +160,7 @@ impl Default for UiState {
         Self {
             worktree_filter: String::new(),
             collapsed_repos: std::collections::HashSet::new(),
+            expanded_worktrees: std::collections::HashSet::new(),
             commits: Vec::new(),
             diff_hunks: Vec::new(),
             show_add_dialog: false,
@@ -168,6 +174,7 @@ impl Default for UiState {
             font_monospace_only: true,
             unsafe_repo_paths: Vec::new(),
             pending_ui_scale: None,
+            hide_middle_panel: false,
         }
     }
 }

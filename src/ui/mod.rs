@@ -283,12 +283,30 @@ impl eframe::App for App {
                 if let Some(action) = sidebar::show(ui, &mut self.state) {
                     match action {
                         SidebarAction::Select(sel) => {
-                            let changed = sel != self.state.selection;
+                            let changed = sel != self.state.selection
+                                || self.state.ui.hide_middle_panel;
+                            self.state.ui.hide_middle_panel = false;
                             self.state.selection = sel;
                             if changed {
                                 self.refresh_commits();
                                 self.refresh_files_view();
                             }
+                        }
+                        SidebarAction::SelectFile { repo_idx, wt_idx, file_idx } => {
+                            self.state.selection.repo_idx = Some(repo_idx);
+                            self.state.selection.worktree_idx = Some(wt_idx);
+                            self.state.selection.commit_idx = None;
+                            let files = self.state.repos.get(repo_idx)
+                                .and_then(|r| r.worktrees.get(wt_idx))
+                                .map(|wt| wt.pending_changes.clone())
+                                .unwrap_or_default();
+                            self.state.ui.files_view = files;
+                            self.state.ui.viewing_pending = true;
+                            self.state.ui.selected_commit_id = None;
+                            self.state.selection.file_idx = Some(file_idx);
+                            self.refresh_diff();
+                            self.refresh_commits();
+                            self.state.ui.hide_middle_panel = true;
                         }
                         SidebarAction::RemoveRepo(repo_idx) => {
                             if repo_idx < self.state.repos.len() {
@@ -310,7 +328,7 @@ impl eframe::App for App {
             });
 
         // ── Middle panel: changes + graph ──────────────────────────────────────
-        SidePanel::left("middle")
+        if !self.state.ui.hide_middle_panel { SidePanel::left("middle")
             .resizable(true)
             .min_width(160.0)
             .default_width(260.0)
@@ -345,7 +363,7 @@ impl eframe::App for App {
                 if let Some(graph_action) = graph::show(ui, &self.state) {
                     self.handle_graph_action(graph_action);
                 }
-            });
+            }); } // end if !hide_middle_panel
 
         // ── Right panel: diff ──────────────────────────────────────────────────
         CentralPanel::default().show(ctx, |ui| {
