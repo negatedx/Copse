@@ -20,11 +20,6 @@ eframe = { version = "0.28", features = ["default"] }
 egui = "0.28"
 egui_extras = "0.28"
 
-# Async runtime & file watching
-tokio = { version = "1", features = ["full"] }
-notify = "6"
-notify-debouncer-mini = "0.4"
-
 # Parallelism for multi-repo scanning
 rayon = "1"
 
@@ -40,7 +35,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 egui-phosphor = { version = "0.6", features = ["regular"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
-reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 
 [build-dependencies]
 winres = "0.1"

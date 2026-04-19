@@ -148,10 +148,6 @@ pub struct UiState {
     /// In-progress value while the UI scale slider is being dragged.
     /// Only written to settings on drag_stopped() to prevent layout thrash.
     pub pending_ui_scale: Option<f32>,
-    /// Tag name of an available update, populated once by the background check.
-    pub update_available: Option<String>,
-    /// True once the user has dismissed the update banner for this session.
-    pub update_dismissed: bool,
 }
 
 impl Default for UiState {
@@ -172,9 +168,6 @@ impl Default for UiState {
             font_monospace_only: true,
             unsafe_repo_paths: Vec::new(),
             pending_ui_scale: None,
-
-            update_available: None,
-            update_dismissed: false,
         }
     }
 }
@@ -186,18 +179,15 @@ pub struct AppState {
     pub repos: Vec<RepoInfo>,
     pub selection: Selection,
     pub ui: UiState,
-    /// Channel for receiving reload signals from the file watcher.
-    pub reload_rx: Option<std::sync::mpsc::Receiver<PathBuf>>,
 }
 
 impl AppState {
-    pub fn new(reload_rx: std::sync::mpsc::Receiver<PathBuf>) -> Self {
+    pub fn new() -> Self {
         Self {
             settings: Settings::load(),
             repos: Vec::new(),
             selection: Selection::default(),
             ui: UiState::default(),
-            reload_rx: Some(reload_rx),
         }
     }
 

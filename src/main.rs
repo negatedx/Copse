@@ -3,8 +3,6 @@
 mod git;
 mod state;
 mod ui;
-mod updater;
-mod watcher;
 
 use anyhow::Result;
 use tracing::info;

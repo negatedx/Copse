@@ -24,6 +24,9 @@ pub struct WorktreeInfo {
     pub is_main: bool,
     pub pending_changes: Vec<FileChange>,
     pub ahead_behind: Option<(usize, usize)>,
+    /// OID of HEAD commit, used to detect new commits without loading history.
+    #[serde(default)]
+    pub head_oid: Option<String>,
 }
 
 impl WorktreeInfo {
@@ -218,6 +221,9 @@ fn load_worktree(repo: &Repository, path: &Path, is_main: bool) -> Result<Worktr
 
     let pending_changes = get_pending_changes(repo)?;
     let ahead_behind = get_ahead_behind(repo).ok();
+    let head_oid = repo.head().ok()
+        .and_then(|h| h.peel_to_commit().ok())
+        .map(|c| c.id().to_string());
 
     Ok(WorktreeInfo {
         name,
@@ -226,6 +232,7 @@ fn load_worktree(repo: &Repository, path: &Path, is_main: bool) -> Result<Worktr
         is_main,
         pending_changes,
         ahead_behind,
+        head_oid,
     })
 }
 

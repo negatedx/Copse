@@ -15,7 +15,6 @@ use crate::{
 use eframe::CreationContext;
 use egui::{CentralPanel, Context, FontId, SidePanel, TextStyle, Visuals};
 use sidebar::SidebarAction;
-use std::sync::mpsc;
 use tracing::info;
 
 fn apply_font_size(ctx: &Context, font_size: f32) {
@@ -60,8 +59,8 @@ pub struct App {
     icon_light: std::sync::Arc<egui::IconData>,
     /// Last effective dark/light state so we only push ViewportCommand::Icon on change.
     last_icon_dark: Option<bool>,
-    /// One-shot receiver for the background update check. Cleared after first receive.
-    update_rx: Option<mpsc::Receiver<Option<String>>>,
+    /// Index into repos for round-robin background polling.
+    poll_background_idx: usize,
 }
 
 impl App {
@@ -78,10 +77,7 @@ impl App {
 
         let system_ppp = cc.egui_ctx.pixels_per_point();
 
-        let (tx, rx) = mpsc::channel();
-        drop(tx);
-
-        let mut state = AppState::new(rx);
+        let mut state = AppState::new();
 
         // One-shot migration: expand any legacy scan_dirs into explicit repo_paths
         // so that user removals persist across restarts.
@@ -124,28 +120,40 @@ impl App {
         load_font(&cc.egui_ctx, &loaded_font_name, &state.ui.available_fonts);
         apply_font_size(&cc.egui_ctx, state.settings.font_size);
 
-        let update_rx = Some(crate::updater::spawn_update_check());
-
-        Self { state, system_dark, system_ppp, loaded_font_name, icon_dark, icon_light, last_icon_dark: None, update_rx }
+        Self { state, system_dark, system_ppp, loaded_font_name, icon_dark, icon_light, last_icon_dark: None, poll_background_idx: 0 }
     }
 
-    fn poll_watcher(&mut self) {
-        let changed: Vec<_> = self
-            .state
-            .reload_rx
-            .as_ref()
-            .map(|rx| rx.try_iter().collect())
-            .unwrap_or_default();
+    fn poll_git(&mut self) {
+        let repo_count = self.state.repos.len();
+        if repo_count == 0 {
+            return;
+        }
 
-        for path in changed {
-            if let Some(repo) = self.state.repos.iter_mut().find(|r| {
-                r.worktrees
-                    .iter()
-                    .any(|wt| wt.path == path || path.starts_with(&wt.path))
-            }) {
-                if let Ok(fresh) = crate::git::load_repo(&repo.path) {
-                    *repo = fresh;
+        // Always refresh the selected repo every tick.
+        if let Some(idx) = self.state.selection.repo_idx {
+            let path = self.state.repos[idx].path.clone();
+            let old_head = self.state.selected_worktree().and_then(|wt| wt.head_oid.clone());
+            if let Ok(fresh) = crate::git::load_repo(&path) {
+                self.state.repos[idx] = fresh;
+            }
+            let new_head = self.state.selected_worktree().and_then(|wt| wt.head_oid.clone());
+            if old_head != new_head {
+                self.refresh_commits();
+            }
+            if self.state.ui.viewing_pending {
+                if let Some(wt) = self.state.selected_worktree() {
+                    self.state.ui.files_view = wt.pending_changes.clone();
                 }
+            }
+        }
+
+        // Round-robin one background repo per tick; skip the selected one.
+        self.poll_background_idx = (self.poll_background_idx + 1) % repo_count;
+        let bg_idx = self.poll_background_idx;
+        if Some(bg_idx) != self.state.selection.repo_idx {
+            let path = self.state.repos[bg_idx].path.clone();
+            if let Ok(fresh) = crate::git::load_repo(&path) {
+                self.state.repos[bg_idx] = fresh;
             }
         }
     }
@@ -231,15 +239,7 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        self.poll_watcher();
-
-        // Poll the one-shot update check channel; clear it once consumed.
-        if let Some(rx) = &self.update_rx {
-            if let Ok(result) = rx.try_recv() {
-                self.state.ui.update_available = result;
-                self.update_rx = None;
-            }
-        }
+        self.poll_git();
 
         let visuals = match self.state.settings.theme {
             Theme::Dark => Visuals::dark(),
