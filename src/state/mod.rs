@@ -159,6 +159,10 @@ pub struct UiState {
     pub split_h_scroll: f32,
     /// Vertical scroll offset shared between the two split-view columns.
     pub split_v_scroll: f32,
+    /// Tag name of an available update, populated once by the background check.
+    pub update_available: Option<String>,
+    /// True once the user has dismissed the update banner for this session.
+    pub update_dismissed: bool,
 }
 
 impl Default for UiState {
@@ -181,6 +185,8 @@ impl Default for UiState {
             pending_ui_scale: None,
             split_h_scroll: 0.0,
             split_v_scroll: 0.0,
+            update_available: None,
+            update_dismissed: false,
         }
     }
 }

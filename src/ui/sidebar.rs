@@ -42,6 +42,57 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
 
     ui.add_space(4.0);
 
+    // ── Update banner ──────────────────────────────────────────────────────────
+    if let Some(ref tag) = state.ui.update_available.clone() {
+        if !state.ui.update_dismissed {
+            let banner_color = Color32::from_rgb(40, 80, 40);
+            let text_color_update = Color32::from_rgb(140, 220, 140);
+            egui::Frame::none()
+                .fill(banner_color)
+                .inner_margin(egui::Margin::symmetric(8.0, 4.0))
+                .rounding(egui::Rounding::same(4.0))
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new(format!("{} Update available: {tag}", egui_phosphor::regular::ARROW_CIRCLE_UP))
+                                .size(12.0)
+                                .color(text_color_update),
+                        );
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            let dismiss = ui.add(
+                                egui::Label::new(RichText::new(ph::X).size(12.0).color(Color32::GRAY))
+                                    .sense(Sense::click()),
+                            );
+                            if dismiss.hovered() {
+                                ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                            }
+                            if dismiss.clicked() {
+                                state.ui.update_dismissed = true;
+                            }
+                            let link = ui.add(
+                                egui::Label::new(
+                                    RichText::new("Download")
+                                        .size(12.0)
+                                        .color(Color32::from_rgb(100, 180, 255))
+                                        .underline(),
+                                )
+                                .sense(Sense::click()),
+                            );
+                            if link.hovered() {
+                                ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                            }
+                            if link.clicked() {
+                                ui.ctx().open_url(egui::OpenUrl::new_tab(
+                                    "https://github.com/negatedx/gitrove/releases",
+                                ));
+                            }
+                        });
+                    });
+                });
+            ui.add_space(4.0);
+        }
+    }
+
     // ── Search box ─────────────────────────────────────────────────────────────
     ui.horizontal(|ui| {
         ui.label(RichText::new(ph::MAGNIFYING_GLASS).size(14.0).color(Color32::GRAY));

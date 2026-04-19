@@ -60,6 +60,8 @@ pub struct App {
     icon_light: std::sync::Arc<egui::IconData>,
     /// Last effective dark/light state so we only push ViewportCommand::Icon on change.
     last_icon_dark: Option<bool>,
+    /// One-shot receiver for the background update check. Cleared after first receive.
+    update_rx: Option<mpsc::Receiver<Option<String>>>,
 }
 
 impl App {
@@ -122,7 +124,9 @@ impl App {
         load_font(&cc.egui_ctx, &loaded_font_name, &state.ui.available_fonts);
         apply_font_size(&cc.egui_ctx, state.settings.font_size);
 
-        Self { state, system_dark, system_ppp, loaded_font_name, icon_dark, icon_light, last_icon_dark: None }
+        let update_rx = Some(crate::updater::spawn_update_check());
+
+        Self { state, system_dark, system_ppp, loaded_font_name, icon_dark, icon_light, last_icon_dark: None, update_rx }
     }
 
     fn poll_watcher(&mut self) {
@@ -228,6 +232,14 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.poll_watcher();
+
+        // Poll the one-shot update check channel; clear it once consumed.
+        if let Some(rx) = &self.update_rx {
+            if let Ok(result) = rx.try_recv() {
+                self.state.ui.update_available = result;
+                self.update_rx = None;
+            }
+        }
 
         let visuals = match self.state.settings.theme {
             Theme::Dark => Visuals::dark(),

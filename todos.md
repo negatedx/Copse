@@ -78,6 +78,23 @@
 
 ---
 
+## Inline changed files in sidebar with two-panel diff view on file select
+
+**Priority:** Medium
+
+**Problem:** The sidebar only shows repos and worktrees. Seeing changed files requires clicking each worktree to populate the middle panel. With many repos open this is slow to scan — you can't see pending changes across repos at a glance.
+
+**Acceptance criteria:**
+- Changed files appear as tree children under each expanded worktree row in the sidebar, with status badges
+- Collapsing a worktree row hides its file children
+- Clicking a file in the sidebar shows its diff in the right panel and hides the middle panel
+- Clicking a worktree row shows the standard 3-panel layout (changes + history) as today
+- Worktrees with no changes show no file children
+
+**Notes:** Sidebar in `src/ui/sidebar.rs`. Pending files may need to be eagerly loaded for all worktrees, not just the selected one — check `AppState` population in `src/ui/mod.rs`. Middle panel visibility can be driven from selection source (sidebar file vs worktree). Reuse file status badge rendering from `src/ui/pending.rs`.
+
+---
+
 ## Fix all compiler warnings
 
 **Priority:** Low
