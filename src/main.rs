@@ -18,17 +18,17 @@ fn load_icon(bytes: &[u8]) -> egui::IconData {
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("gitrove=info".parse()?))
+        .with_env_filter(EnvFilter::from_default_env().add_directive("copse=info".parse()?))
         .init();
 
-    info!("starting gitrove");
+    info!("starting copse");
 
     let icon_dark  = std::sync::Arc::new(load_icon(include_bytes!("../assets/icon-dark.png")));
     let icon_light = std::sync::Arc::new(load_icon(include_bytes!("../assets/icon-light.png")));
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("gitrove")
+            .with_title("Copse")
             .with_icon(icon_dark.clone())
             .with_inner_size([1200.0, 760.0])
             .with_min_inner_size([800.0, 500.0]),
@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     };
 
     eframe::run_native(
-        "gitrove",
+        "copse",
         native_options,
         Box::new(move |cc| Ok(Box::new(ui::App::new(cc, icon_dark, icon_light)))),
     )

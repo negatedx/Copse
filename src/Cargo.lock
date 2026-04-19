@@ -846,6 +846,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "copse"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dirs",
+ "eframe",
+ "egui",
+ "egui-phosphor",
+ "egui_extras",
+ "git2",
+ "image",
+ "rayon",
+ "rfd",
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-subscriber",
+ "walkdir",
+ "winres",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1578,29 +1601,6 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "url",
-]
-
-[[package]]
-name = "gitrove"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "dirs",
- "eframe",
- "egui",
- "egui-phosphor",
- "egui_extras",
- "git2",
- "image",
- "rayon",
- "rfd",
- "serde",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "walkdir",
- "winres",
 ]
 
 [[package]]

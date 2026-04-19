@@ -1,5 +1,5 @@
 [package]
-name = "gitrove"
+name = "copse"
 version = "0.1.0"
 edition = "2021"
 description = "Multi-repo, multi-worktree Git dashboard"
@@ -8,7 +8,7 @@ license = "MIT"
 build = "build.rs"
 
 [[bin]]
-name = "gitrove"
+name = "copse"
 path = "main.rs"
 
 [dependencies]

@@ -1,10 +1,10 @@
-# CLAUDE.md — gitrove
+# CLAUDE.md — copse
 
 This file tells Claude Code how to work effectively on this project. Read it before making changes.
 
 ## What this project is
 
-gitrove is a read-only Rust/egui desktop app for visualising Git state across multiple repos and worktrees. It is a developer tool built for a specific workflow: many microservice repos open at once, each with one or more worktrees, with commits being driven by Claude Code rather than by the GUI itself.
+Copse is a read-only Rust/egui desktop app for visualising Git state across multiple repos and worktrees. It is a developer tool built for a specific workflow: many microservice repos open at once, each with one or more worktrees, with commits being driven by Claude Code rather than by the GUI itself.
 
 **v1 is intentionally read-only.** Do not add staging, committing, pushing, or branch management unless explicitly asked. Keep the surface area small.
 
@@ -79,7 +79,7 @@ There are no UI tests. Test the `git` module against real repos:
 cargo test
 ```
 
-For manual testing, point the app at a directory containing multiple repos with multiple worktrees. The dev's own `~/projects` directory is usually sufficient. Log output at `RUST_LOG=gitrove=debug` shows all repo loads and watcher events.
+For manual testing, point the app at a directory containing multiple repos with multiple worktrees. The dev's own `~/projects` directory is usually sufficient. Log output at `RUST_LOG=copse=debug` shows all repo loads and watcher events.
 
 ## Build
 

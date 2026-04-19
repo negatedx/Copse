@@ -95,7 +95,7 @@ impl Settings {
 fn settings_path() -> PathBuf {
     dirs::config_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("gitrove")
+        .join("copse")
         .join("settings.json")
 }
 

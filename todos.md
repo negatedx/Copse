@@ -1,4 +1,4 @@
-# gitrove — Todo List
+# copse — Todo List
 
 ---
 
@@ -65,7 +65,7 @@
 
 **Priority:** Medium
 
-**Problem:** GitRove only builds and ships a Windows binary. Linux is a common platform for developers who would use this tool alongside Claude Code.
+**Problem:** Copse only builds and ships a Windows binary. Linux is a common platform for developers who would use this tool alongside Claude Code.
 
 **Acceptance criteria:**
 - App builds and runs on Ubuntu (latest LTS) without errors
@@ -80,7 +80,7 @@
 
 **Priority:** Low
 
-**Problem:** GitRove has no macOS build. eframe supports macOS but the release pipeline is Windows-only.
+**Problem:** Copse has no macOS build. eframe supports macOS but the release pipeline is Windows-only.
 
 **Acceptance criteria:**
 - App builds and runs on macOS (Apple Silicon and/or Intel)
