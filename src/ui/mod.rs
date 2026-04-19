@@ -319,7 +319,7 @@ impl eframe::App for App {
 
         // ── Right panel: diff ──────────────────────────────────────────────────
         CentralPanel::default().show(ctx, |ui| {
-            diff::show(ui, &self.state);
+            diff::show(ui, &mut self.state);
         });
 
         // ── Settings window ────────────────────────────────────────────────────

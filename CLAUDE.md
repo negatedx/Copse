@@ -59,6 +59,10 @@ src/ui/diff.rs       Right panel. Unified diff with line numbers.
 
 The watcher fires `PathBuf` on the `reload_rx` channel. `App::poll_watcher()` reads it each frame and calls `git::load_repo` for the affected repo, replacing the stale entry in `state.repos`. If you add new git data (e.g., stash list), ensure `load_repo` fetches it so watcher-driven refreshes stay complete.
 
+## egui reference
+
+**`egui-patterns.md`** in the repo root is the living reference for non-obvious egui behaviour. Read it before tackling a tricky layout problem, and add to it whenever a new pattern is worked out.
+
 ## What to avoid
 
 - **Do not shell out to `git`** — use `git2` for everything. Parsing CLI output is fragile and slow.

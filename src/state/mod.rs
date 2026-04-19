@@ -35,6 +35,12 @@ pub struct Settings {
     /// Name of the installed font to use (empty string = egui built-in default).
     #[serde(default)]
     pub font_name: String,
+    /// Show diff in side-by-side columns rather than unified view.
+    #[serde(default)]
+    pub diff_side_by_side: bool,
+    /// Wrap long diff lines instead of scrolling horizontally.
+    #[serde(default)]
+    pub diff_word_wrap: bool,
 }
 
 fn default_ui_scale() -> f32 {
@@ -60,6 +66,8 @@ impl Default for Settings {
             changes_panel_height: 200.0,
             font_size: 14.0,
             font_name: String::new(),
+            diff_side_by_side: false,
+            diff_word_wrap: false,
         }
     }
 }
@@ -147,6 +155,10 @@ pub struct UiState {
     /// In-progress value while the UI scale slider is being dragged.
     /// Only written to settings on drag_stopped() to prevent layout thrash.
     pub pending_ui_scale: Option<f32>,
+    /// Horizontal scroll offset shared between the two split-view columns.
+    pub split_h_scroll: f32,
+    /// Vertical scroll offset shared between the two split-view columns.
+    pub split_v_scroll: f32,
 }
 
 impl Default for UiState {
@@ -167,6 +179,8 @@ impl Default for UiState {
             font_monospace_only: true,
             unsafe_repo_paths: Vec::new(),
             pending_ui_scale: None,
+            split_h_scroll: 0.0,
+            split_v_scroll: 0.0,
         }
     }
 }
