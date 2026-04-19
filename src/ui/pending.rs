@@ -47,7 +47,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
             .max_height(panel_h)
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                ui.spacing_mut().item_spacing = Vec2::new(0.0, 2.0);
+                ui.spacing_mut().item_spacing = Vec2::new(0.0, 0.0);
                 ui.set_min_height(panel_h);
 
                 for (i, change) in changes.iter().enumerate() {
@@ -66,6 +66,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
                     let bg_idx = ui.painter().add(egui::Shape::Noop);
 
                     ui.push_id(("pending", i), |ui| {
+                        ui.add_space(4.0);
                         ui.horizontal(|ui| {
                             ui.add_space(8.0);
                             ui.label(RichText::new(change.status.label()).size(12.0).strong().color(label_color));
@@ -73,6 +74,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<usize> {
                             ui.label(RichText::new(&name).size(13.0)
                                 .color(if is_sel { sel_color } else { text_color }));
                         });
+                        ui.add_space(4.0);
                     });
 
                     let row_rect = Rect::from_min_max(pos2(row_x, row_y), pos2(row_x + row_w, ui.cursor().min.y));

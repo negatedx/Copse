@@ -2,40 +2,6 @@
 
 ---
 
-## GitHub Actions release pipeline and in-app update notification
-
-**Priority:** High
-
-**Problem:** There is no automated way to build and publish releases, and users who install the app have no way to know when a newer version is available. Both are needed before sharing the app publicly.
-
-**Acceptance criteria:**
-- A `.github/workflows/release.yml` workflow triggers on `v*` tag pushes
-- The workflow builds a release binary for Windows (x86_64) and attaches it to a GitHub Release
-- The app version in `Cargo.toml` is the single source of truth (read via `env!("CARGO_PKG_VERSION")`)
-- On startup, the app checks the GitHub releases API for the latest published version (non-blocking, background thread)
-- If a newer version is available, a dismissible banner or status indicator appears in the UI with a link to the releases page
-- The update check result is cached for the session so it does not re-fire on every frame
-- No auto-download or auto-install — the user opens the browser to download manually
-
-**Notes:** Use `reqwest` (blocking, minimal features) or a plain `std::net` HTTPS call for the version check — avoid pulling in a full async runtime just for this. The GitHub releases API endpoint is `https://api.github.com/repos/{owner}/{repo}/releases/latest`; compare the `tag_name` field against the running version using semver. The update check should be on a background thread sending the result back via a `std::sync::mpsc` channel, consistent with how the watcher works. The banner can live in the sidebar header or the settings window. `self_update` crate exists but is heavyweight; a lightweight manual check is preferred given the no-auto-install requirement.
-
----
-
-## UI is too small and tight generally
-
-**Priority:** Medium
-
-**Problem:** Row heights, padding, and hit targets are too small. Text is cramped and the UI feels dense and hard to use.
-
-**Acceptance criteria:**
-- Repo rows, worktree rows, commit rows, and file rows all have comfortable padding
-- Minimum row height feels consistent across all panels
-- No text or elements feel clipped or crowded
-
-**Notes:** `item_spacing`, `ui.add_space()`, and explicit row height minimums in the interact rect are the levers here.
-
----
-
 ## Auto-select first file when switching worktree or commit
 
 **Priority:** Medium

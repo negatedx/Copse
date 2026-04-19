@@ -43,7 +43,7 @@ pub fn show(ui: &mut Ui, state: &AppState) -> Option<GraphAction> {
         .id_source("graph_scroll")
         .auto_shrink([false, false])
         .show(ui, |ui| {
-            ui.spacing_mut().item_spacing = Vec2::new(0.0, 4.0);
+            ui.spacing_mut().item_spacing = Vec2::new(0.0, 6.0);
 
             // Collect node centers during layout; draw connecting lines after all rows.
             let mut node_centers: Vec<Pos2> = Vec::new();

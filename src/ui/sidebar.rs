@@ -59,7 +59,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
     ScrollArea::vertical()
         .id_source("sidebar_scroll")
         .show(ui, |ui| {
-            ui.spacing_mut().item_spacing = Vec2::new(0.0, 4.0);
+            ui.spacing_mut().item_spacing = Vec2::new(0.0, 2.0);
 
             let repo_count = state.repos.len();
             for repo_idx in 0..repo_count {
@@ -87,6 +87,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                 let bg_idx = ui.painter().add(egui::Shape::Noop);
 
                 ui.push_id(("repo", repo_idx), |ui| {
+                    ui.add_space(5.0);
                     ui.horizontal(|ui| {
                         ui.add_space(6.0);
                         let chevron_resp = ui.add(egui::Label::new(
@@ -102,11 +103,9 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                                 state.ui.collapsed_repos.insert(repo_idx);
                             }
                         }
-                        ui.label(
-                            RichText::new(&repo_name).size(14.0).strong()
-                                .color(if repo_selected { sel_color } else { text_color }),
-                        );
+                        // RTL section claims its space first; repo name fills whatever remains.
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            ui.spacing_mut().item_spacing.x = 6.0;
                             ui.add_space(4.0);
                             let remove_resp = ui.add(egui::Label::new(
                                 RichText::new(ph::X).size(14.0).color(Color32::DARK_GRAY)
@@ -122,8 +121,16 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                             if total_changes > 0 {
                                 ui.label(RichText::new("●").size(12.0).color(Color32::from_rgb(217, 90, 48)));
                             }
+                            // Repo name in remaining space, truncated so it never reaches the icons.
+                            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                                ui.add(egui::Label::new(
+                                    RichText::new(&repo_name).size(14.0).strong()
+                                        .color(if repo_selected { sel_color } else { text_color }),
+                                ).truncate());
+                            });
                         });
                     });
+                    ui.add_space(5.0);
                 });
 
                 // Leave the rightmost 36px uncovered so the × button can receive clicks.
@@ -168,6 +175,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                         let wt_bg_idx = ui.painter().add(egui::Shape::Noop);
 
                         ui.push_id(("wt", repo_idx, wt_idx), |ui| {
+                            ui.add_space(4.0);
                             ui.horizontal(|ui| {
                                 ui.add_space(26.0);
                                 ui.label(RichText::new("–").size(12.0).color(Color32::DARK_GRAY));
@@ -189,6 +197,7 @@ pub fn show(ui: &mut Ui, state: &mut AppState) -> Option<SidebarAction> {
                                     });
                                 }
                             });
+                            ui.add_space(4.0);
                         });
 
                         let wt_rect = Rect::from_min_max(
